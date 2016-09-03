@@ -34,20 +34,38 @@ namespace RLNET
         private bool numLock;
         private bool capsLock;
         private bool scrollLock;
+        private bool alt;
+        private bool shift;
+        private bool ctrl;
+        private bool repeating;
 
         internal RLKeyboard(GameWindow gameWindow)
         {
             gameWindow.KeyDown += gameWindow_KeyDown;
+            repeating = gameWindow.Keyboard.KeyRepeat;
+            
         }
 
-        private void gameWindow_KeyDown(object sender, OpenTK.Input.KeyboardKeyEventArgs e)
+        private void gameWindow_KeyDown(object sender, KeyboardKeyEventArgs e)
         {
-            if (e.Key == OpenTK.Input.Key.NumLock) numLock = !numLock;
-            else if (e.Key == OpenTK.Input.Key.CapsLock) capsLock = !capsLock;
-            else if (e.Key == OpenTK.Input.Key.ScrollLock) scrollLock = !scrollLock;
-            RLKeyPress newKeyPress = new RLKeyPress((RLKey)e.Key, e.Alt, e.Shift, e.Control, e.IsRepeat, numLock, capsLock, scrollLock);
+
+            KeyboardState keyState = Keyboard.GetState();
+
+
+
+            if (e.Key == Key.NumLock) numLock = !numLock;
+            else if (e.Key == Key.CapsLock) capsLock = !capsLock;
+            else if (e.Key == Key.ScrollLock) scrollLock = !scrollLock;
+
+            //Check modifier keys (OpenTK changes)
+            shift = (keyState.IsKeyDown(Key.LShift) || keyState.IsKeyDown(Key.RShift));
+            ctrl = (keyState.IsKeyDown(Key.LControl) || keyState.IsKeyDown(Key.RControl));
+            alt = (keyState.IsKeyDown(Key.LAlt) || keyState.IsKeyDown(Key.RAlt));
+
+            RLKeyPress newKeyPress = new RLKeyPress((RLKey)e.Key, alt, shift, ctrl, repeating, numLock, capsLock, scrollLock);
             if (keyPress != newKeyPress) keyPress = newKeyPress;
         }
+
 
         /// <summary>
         /// Checks to see if a key was pressed.
