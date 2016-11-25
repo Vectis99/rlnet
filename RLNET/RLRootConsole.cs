@@ -25,9 +25,6 @@
 
 using OpenTK.Graphics.OpenGL;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Imaging;
 using OpenTK;
@@ -489,7 +486,7 @@ namespace RLNET
             GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(backColorVertices.Length * 3 * sizeof(float)), backColorVertices, BufferUsageHint.DynamicDraw);
             //Draw Back Color
-            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
 
             //Fore Color / Texture Draw
             //Texture Coord Buffer
@@ -503,7 +500,7 @@ namespace RLNET
             GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(colorVertices.Length * 3 * sizeof(float)), colorVertices, BufferUsageHint.DynamicDraw);
             //Draw
-            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(BeginMode.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
 
             //Clean Up
             GL.Disable(EnableCap.Texture2D);

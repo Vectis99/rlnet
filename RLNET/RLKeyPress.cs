@@ -23,11 +23,6 @@
  */
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RLNET
 {
@@ -136,6 +131,22 @@ namespace RLNET
             }
             else return (A.Key == B.Key && A.Alt == B.Alt && A.Shift == B.Shift && A.Control == B.Control && A.Repeating == B.Repeating);
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) { return false; }
+            if (object.ReferenceEquals(this, obj)) { return true; }
+            
+            var other = obj as RLKeyPress;
+            return other != null && (Key == other.Key && Alt == other.Alt && Shift == other.Shift && Control == other.Control && Repeating == other.Repeating);
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+
 
         public static bool operator !=(RLKeyPress A, RLKeyPress B)
         {
