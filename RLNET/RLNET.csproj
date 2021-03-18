@@ -35,6 +35,9 @@
     </None>
     <None Include="RLNET.nuspec" />
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="OpenTK" Version="5.0.0-pre.3" />
+  </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
