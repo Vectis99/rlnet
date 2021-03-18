@@ -42,35 +42,7 @@ namespace RLNET
         private const string FRAGMENT_SHADER_PATH = "Shaders/fs.glsl";
         private GameWindow window;
         private bool closed = false;
-        // Had to change a lot of ints here to uints. Also added new things
-        /// <summary> Program ID used for tracking a program </summary>
-        private uint pgmID;
-        /// <summary> Vertex shader GL handle </summary>
-        private uint vsID;
-        /// <summary> Fragment shader GL handle </summary>
-        private uint fsID;
 
-        /// <summary> Vertex shader color variable handle </summary>
-        private uint attribute_vcol;
-        /// <summary> Vertex shader position variable handle </summary>
-        private uint attribute_vpos;
-        /// <summary> Vertex shader model view handle </summary>
-        private int uniform_mview;
-        /// <summary> VBO position handle </summary>
-        /// <remarks> VBO = Vertex Buffer Object </remarks>
-        private uint vbo_position;
-        /// <summary> VBO color handle </summary>
-        /// <remarks> VBO = Vertex Buffer Object </remarks>
-        private uint vbo_color;
-        /// <summary> VBO model view handle </summary>
-        /// <remarks> VBO = Vertex Buffer Object </remarks>
-        private uint vbo_mview;
-        /// <summary>Vertex data used in tutorial</summary>
-        Vector3[] vertdata;
-        /// <summary>Color data used in tutorial</summary>
-        Vector3[] coldata;
-        /// <summary>Model view data used in tutorial</summary>
-        Matrix4[] mviewdata;
 
 
 
@@ -194,8 +166,13 @@ namespace RLNET
             window.Closing += window_Closing;
             Mouse = new RLMouse(window);
             Keyboard = new RLKeyboard(window);
-            LoadTexture2d(settings.BitmapFile);
 
+            InitGL(settings);
+        }
+
+        private void InitGL(RLSettings settings)
+        {
+            LoadTexture2d(settings.BitmapFile);
             vboId = GL.GenBuffer();
             iboId = GL.GenBuffer();
             tcboId = GL.GenBuffer();
@@ -208,7 +185,7 @@ namespace RLNET
         {
             EventArgs e = new EventArgs();
             window.VSync = VSyncMode.On;
-            InitGLProgram();
+            LoadGL();
             TutorialOnLoad();
             if (OnLoad != null) OnLoad(this, e);
         }
@@ -226,8 +203,6 @@ namespace RLNET
         public void ResizeWindow(int width, int height)
         {
             window.Size = new Vector2i(width, height);
-            // window.Width = width;
-            // window.Height = height;
         }
 
         public void SetWindowState(RLWindowState windowState)
@@ -556,26 +531,12 @@ namespace RLNET
             window.SwapBuffers();
         }
 
-        private void InitGLProgram()
+        /// <summary>
+        /// Loads all relevant items for OpenGL.
+        /// </summary>
+        private void LoadGL()
         {
-            // Initalize the program
-            pgmID = GL.CreateProgram();
-            // Load the shaders
-            LoadShader(VERTEX_SHADER_PATH, ShaderType.VertexShader, pgmID, out vsID);
-            LoadShader(FRAGMENT_SHADER_PATH, ShaderType.FragmentShader, pgmID, out fsID);
-            GL.LinkProgram(pgmID);
 
-            // Bind shader attributes to uint handles.
-            // Disagreement between tutorial here whether should be int or uint
-            attribute_vpos = (uint)GL.GetAttribLocation(pgmID, "vPosition");
-            attribute_vcol = (uint)GL.GetAttribLocation(pgmID, "vColor");
-            uniform_mview = GL.GetUniformLocation(pgmID, "modelview");
-
-
-            // Deviating from tutorial here:
-            GL.GenBuffer(out vbo_position);
-            GL.GenBuffer(out vbo_color);
-            GL.GenBuffer(out vbo_mview);
         }
 
         private void CellsToVertices()
@@ -726,65 +687,17 @@ namespace RLNET
 
         private void TutorialOnLoad()
         {
-            vertdata = new Vector3[] { new Vector3(-0.8f, -0.8f, 0f),
-                new Vector3( 0.8f, -0.8f, 0f),
-                new Vector3( 0f,  0.8f, 0f)};
 
-
-            coldata = new Vector3[] { new Vector3(1f, 0f, 0f),
-                new Vector3( 0f, 0f, 1f),
-                new Vector3( 0f,  1f, 0f)};
-
-
-            mviewdata = new Matrix4[]{
-                Matrix4.Identity
-            };
-
-            GL.ClearColor(Color.CornflowerBlue.R, Color.CornflowerBlue.G, Color.CornflowerBlue.B, Color.CornflowerBlue.A);
-            GL.PointSize(5f);
         }
 
         private void TutorialUpdateFrame()
         {
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vbo_position);
-            GL.BufferData<Vector3>(BufferTargetARB.ArrayBuffer, vertdata, BufferUsageARB.StaticDraw);
-            // 3 = attribute_vpos.count?
-            GL.VertexAttribPointer(attribute_vpos, 3, VertexAttribPointerType.Float, false, 0, 0);
 
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vbo_color);
-            GL.BufferData<Vector3>(BufferTargetARB.ArrayBuffer, coldata, BufferUsageARB.StaticDraw);
-            // 3 = attribute_vpos.count?
-            GL.VertexAttribPointer(attribute_vcol, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-            // GL.UniformMatrix4(uniform_mview, false, ref mviewdata[0]);
-            // The above line doesn't work so I replaced it with the following:
-            Matrix4 m = mviewdata[0];
-            float[] matrixToArray = new float[] {
-                m.Column0.X, m.Column0.Y, m.Column0.Z, m.Column0.W,
-                m.Column1.X, m.Column1.Y, m.Column1.Z, m.Column1.W,
-                m.Column2.X, m.Column2.Y, m.Column2.Z, m.Column2.W,
-                m.Column3.X, m.Column3.Y, m.Column3.Z, m.Column3.W
-            };
-            GL.UniformMatrix4fv(uniform_mview, false, matrixToArray);
-
-            GL.UseProgram(pgmID);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
         }
 
         private void TutorialRenderFrame()
         {
-            GL.Viewport(0, 0, Width, Height);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.Enable(EnableCap.DepthTest);
 
-            GL.EnableVertexAttribArray(attribute_vpos);
-            GL.EnableVertexAttribArray(attribute_vcol);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            GL.DisableVertexAttribArray(attribute_vpos);
-            GL.DisableVertexAttribArray(attribute_vcol);
-
-            GL.Flush();
-            window.SwapBuffers();
         }
     }
 }
