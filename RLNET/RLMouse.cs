@@ -24,6 +24,9 @@
 #endregion
 
 using OpenTK;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,10 +67,9 @@ namespace RLNET
 
         internal RLMouse(GameWindow window)
         {
-           
-            window.Mouse.Move += window_MouseMove;
-            window.Mouse.ButtonDown += window_MouseDown;
-            window.Mouse.ButtonUp += window_MouseUp;
+            window.MouseMove += window_MouseMove;
+            window.MouseDown += window_MouseDown;
+            window.MouseUp += window_MouseUp;
         }
 
         internal void Calibrate(int charWidth, int charHeight, int offsetX, int offsetY, float scale)
@@ -79,35 +81,35 @@ namespace RLNET
             this.scale = scale;
         }
 
-        private void window_MouseUp(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        private void window_MouseUp(MouseButtonEventArgs e)
         {
-            if (e.Button == OpenTK.Input.MouseButton.Left)
+            if (e.Button == MouseButton.Left)
             {
                 LeftPressed = false;
                 leftClick = true;
             }
-            else if (e.Button == OpenTK.Input.MouseButton.Right)
+            else if (e.Button == MouseButton.Right)
             {
                 RightPressed = false;
                 rightClick = true;
             }
         }
 
-        private void window_MouseDown(object sender, OpenTK.Input.MouseButtonEventArgs e)
+        private void window_MouseDown(MouseButtonEventArgs e)
         {
-            if (e.Button == OpenTK.Input.MouseButton.Left)
+            if (e.Button == MouseButton.Left)
             {
                 LeftPressed = true;
                 leftClick = false;
             }
-            else if (e.Button == OpenTK.Input.MouseButton.Right)
+            else if (e.Button == MouseButton.Right)
             {
                 RightPressed = true;
                 rightClick = false;
             }
         }
 
-        private void window_MouseMove(object sender, OpenTK.Input.MouseMoveEventArgs e)
+        private void window_MouseMove(MouseMoveEventArgs e)
         {
             X = (int)((e.X - offsetX) / (charWidth * scale));
             Y = (int)((e.Y - offsetY) / (charHeight * scale));

@@ -25,6 +25,9 @@
 
 using OpenTK;
 using OpenTK.Input;
+using OpenTK.Windowing.Common;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace RLNET
 {
@@ -42,25 +45,19 @@ namespace RLNET
         internal RLKeyboard(GameWindow gameWindow)
         {
             gameWindow.KeyDown += gameWindow_KeyDown;
-            repeating = gameWindow.Keyboard.KeyRepeat;
-            
         }
 
-        private void gameWindow_KeyDown(object sender, KeyboardKeyEventArgs e)
+        private void gameWindow_KeyDown(KeyboardKeyEventArgs e)
         {
-
-            KeyboardState keyState = Keyboard.GetState();
-
-
-
-            if (e.Key == Key.NumLock) numLock = !numLock;
-            else if (e.Key == Key.CapsLock) capsLock = !capsLock;
-            else if (e.Key == Key.ScrollLock) scrollLock = !scrollLock;
+            if (e.Key == Keys.NumLock) numLock = !numLock;
+            else if (e.Key == Keys.CapsLock) capsLock = !capsLock;
+            else if (e.Key == Keys.ScrollLock) scrollLock = !scrollLock;
 
             //Check modifier keys (OpenTK changes)
-            shift = (keyState.IsKeyDown(Key.LShift) || keyState.IsKeyDown(Key.RShift));
-            ctrl = (keyState.IsKeyDown(Key.LControl) || keyState.IsKeyDown(Key.RControl));
-            alt = (keyState.IsKeyDown(Key.LAlt) || keyState.IsKeyDown(Key.RAlt));
+            shift = e.Shift; //(keyState.IsKeyDown(Key.LShift) || keyState.IsKeyDown(Key.RShift));
+            ctrl = e.Control; // (keyState.IsKeyDown(Key.LControl) || keyState.IsKeyDown(Key.RControl));
+            alt = e.Alt; //(keyState.IsKeyDown(Key.LAlt) || keyState.IsKeyDown(Key.RAlt));
+            repeating = e.IsRepeat;
 
             RLKeyPress newKeyPress = new RLKeyPress((RLKey)e.Key, alt, shift, ctrl, repeating, numLock, capsLock, scrollLock);
             if (keyPress != newKeyPress) keyPress = newKeyPress;

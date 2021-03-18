@@ -23,6 +23,7 @@
  */
 #endregion
 
+using OpenTK.Mathematics;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,9 +93,9 @@ namespace RLNET
             this.b = (float)b / 255f;
         }
 
-        internal OpenTK.Vector3 ToVector3()
+        internal Vector3 ToVector3()
         {
-            return new OpenTK.Vector3(r, g, b);
+            return new Vector3(r, g, b);
         }
 
         /// <summary>

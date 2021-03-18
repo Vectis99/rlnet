@@ -29,6 +29,9 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using OpenTK;
 using OpenTK.Graphics;
+using OpenTK.Windowing.Desktop;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.Common;
 
 namespace RLNET
 {
@@ -36,12 +39,13 @@ namespace RLNET
     {
         private GameWindow window;
         private bool closed = false;
-        private int texId;
-        private int vboId; //position bo
-        private int iboId; //index bo
-        private int tcboId; //tex coord bo
-        private int foreColorId; //color3 bo
-        private int backColorId; //color3 bo
+        // Had to change a lot of ints here to uints
+        private uint texId;
+        private uint vboId; //position bo
+        private uint iboId; //index bo
+        private uint tcboId; //tex coord bo
+        private uint foreColorId; //color3 bo
+        private uint backColorId; //color3 bo
         private Vector2[] texVertices;
         private Vector3[] colorVertices;
         private Vector3[] backColorVertices;
@@ -59,7 +63,7 @@ namespace RLNET
 
         public event UpdateEventHandler Render;
         public event UpdateEventHandler Update;
-        public event EventHandler<EventArgs> OnLoad;
+        public event EventHandler OnLoad;
         public event EventHandler<System.ComponentModel.CancelEventArgs> OnClosing;
         public event ResizeEventHandler OnResize;
 
@@ -130,7 +134,14 @@ namespace RLNET
             this.charHeight = settings.CharHeight;
             this.resizeType = settings.ResizeType;
 
-            window = new GameWindow((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale), GraphicsMode.Default);
+            //window = new GameWindow((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale), GraphicsMode.Default);
+            //following four lines are an adhoc replacement for the above
+            GameWindowSettings gws = new GameWindowSettings();
+            gws.RenderFrequency = 30d; // Seems to be implied by a later call.
+            NativeWindowSettings nws = new NativeWindowSettings();
+            nws.Size = new Vector2i((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale));
+            window = new GameWindow(gws, nws);
+
             window.WindowBorder = (WindowBorder)settings.WindowBorder;
             if (settings.StartWindowState == RLWindowState.Fullscreen || settings.StartWindowState == RLWindowState.Maximized)
             {
@@ -156,13 +167,14 @@ namespace RLNET
             CalcWindow(true);
         }
 
-        void window_Load(object sender, EventArgs e)
+        void window_Load()
         {
+            EventArgs e = new EventArgs();
             window.VSync = VSyncMode.On;
             if (OnLoad != null) OnLoad(this, e);
         }
 
-        void window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        void window_Closing(System.ComponentModel.CancelEventArgs e)
         {
             if (OnClosing != null) OnClosing(this, e);
         }
@@ -174,8 +186,9 @@ namespace RLNET
         /// <param name="height">The new height of the window, in pixels.</param>
         public void ResizeWindow(int width, int height)
         {
-            window.Width = width;
-            window.Height = height;
+            window.Size = new Vector2i(width, height);
+            // window.Width = width;
+            // window.Height = height;
         }
 
         public void SetWindowState(RLWindowState windowState)
@@ -206,7 +219,7 @@ namespace RLNET
                     int viewWidth = (int)(Width * charWidth * scale);
                     int viewHeight = (int)(Height * charHeight * scale);
 
-                    if (viewWidth != window.Width || viewHeight != window.Height)
+                    if (viewWidth != window.Size.X || viewHeight != window.Size.Y)
                     {
                         ResizeWindow(viewWidth, viewHeight);
                     }
@@ -224,7 +237,7 @@ namespace RLNET
             window.Close();
         }
 
-        void window_Resize(object sender, EventArgs e)
+        void window_Resize(OpenTK.Windowing.Common.ResizeEventArgs e)
         {
             CalcWindow(false);
         }
@@ -235,8 +248,8 @@ namespace RLNET
             {
                 int viewWidth = (int)(Width * charWidth * scale);
                 int viewHeight = (int)(Height * charHeight * scale);
-                int newOffsetX = (window.Width - viewWidth) / 2;
-                int newOffsetY = (window.Height - viewHeight) / 2;
+                int newOffsetX = (window.Size.X - viewWidth) / 2;
+                int newOffsetY = (window.Size.Y - viewHeight) / 2;
 
                 if (startup || offsetX != newOffsetX || offsetY != newOffsetY)
                 {
@@ -253,8 +266,8 @@ namespace RLNET
             }
             else if (resizeType == RLResizeType.ResizeCells)
             {
-                int width = window.Width / charWidth;
-                int height = window.Height / charHeight;
+                int width = window.Size.X / charWidth;
+                int height = window.Size.Y / charHeight;
 
                 if (startup || width != Width || height != Height)
                 {
@@ -267,11 +280,11 @@ namespace RLNET
             }
             else if (resizeType == RLResizeType.ResizeScale)
             {
-                float newScale = Math.Min(window.Width / (charWidth * Width), window.Height / (charHeight * Height));
+                float newScale = Math.Min(window.Size.X / (charWidth * Width), window.Size.Y / (charHeight * Height));
                 int viewWidth = (int)(Width * charWidth * newScale);
                 int viewHeight = (int)(Height * charHeight * newScale);
-                int newOffsetX = (window.Width - viewWidth) / 2;
-                int newOffsetY = (window.Height - viewHeight) / 2;
+                int newOffsetX = (window.Size.X - viewWidth) / 2;
+                int newOffsetY = (window.Size.Y - viewHeight) / 2;
 
                 if (startup || newScale != scale || offsetX != newOffsetX || offsetY != newOffsetY)
                 {
@@ -335,9 +348,10 @@ namespace RLNET
         /// <summary>
         /// Opens the window and begins the game loop.
         /// </summary>
-        public void Run(double fps = 30d)
+        public void Run()
         {
-            window.Run(fps);
+            //window.Run(fps);
+            window.Run();
         }
 
         /// <summary>
@@ -379,19 +393,19 @@ namespace RLNET
             return closed;
         }
 
-        private void window_UpdateFrame(object sender, FrameEventArgs e)
+        private void window_UpdateFrame(FrameEventArgs e)
         {
             if (Update != null)
                 Update(this, new UpdateEventArgs(e.Time));
         }
 
-        private void window_RenderFrame(object sender, FrameEventArgs e)
+        private void window_RenderFrame(FrameEventArgs e)
         {
             if (Render != null)
                 Render(this, new UpdateEventArgs(e.Time));
         }
 
-        private void window_Closed(object sender, EventArgs e)
+        private void window_Closed()
         {
             closed = true;
 
@@ -568,7 +582,7 @@ namespace RLNET
         {
             if (texId != 0) GL.DeleteTexture(texId);
             texId = GL.GenTexture();
-            GL.BindTexture(TextureTarget.Texture2D, texId);
+            GL.BindTexture(TextureTarget.Texture2d, texId);
 
             Bitmap bmp = new Bitmap(filename);
             BitmapData bmpData = bmp.LockBits(
@@ -597,11 +611,11 @@ namespace RLNET
             System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
 
             //Create Texture
-            GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, bmpData.Width, bmpData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+            GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, bmpData.Width, bmpData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
             bmp.UnlockBits(bmpData);
 
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         }
     }
 }
