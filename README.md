@@ -2,7 +2,7 @@
 
 RLNET is a lightweight API to help quickly create tile-based games for .NET. RLNET provides a console output, swappable colors, true color sprites, keyboard and mouse inputs.
 
-
+This version of the project was updated by Vectis.
 
 RLNET uses [OpenTK](http://www.opentk.com)
 
