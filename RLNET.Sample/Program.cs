@@ -97,7 +97,8 @@ namespace RLNET.Sample
             }
             rootConsole.SetBackColor(rootConsole.Mouse.X, rootConsole.Mouse.Y, RLColor.CGA[color]);
 
-            rootConsole.Draw();
+            // TODO uncomment:
+            //rootConsole.Draw();
         }
     }
 }

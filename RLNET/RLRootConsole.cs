@@ -32,14 +32,49 @@ using OpenTK.Graphics;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using System.IO;
 
 namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
+        private const string VERTEX_SHADER_PATH = "Shaders/vs.glsl";
+        private const string FRAGMENT_SHADER_PATH = "Shaders/fs.glsl";
         private GameWindow window;
         private bool closed = false;
-        // Had to change a lot of ints here to uints
+        // Had to change a lot of ints here to uints. Also added new things
+        /// <summary> Program ID used for tracking a program </summary>
+        private uint pgmID;
+        /// <summary> Vertex shader GL handle </summary>
+        private uint vsID;
+        /// <summary> Fragment shader GL handle </summary>
+        private uint fsID;
+
+        /// <summary> Vertex shader color variable handle </summary>
+        private uint attribute_vcol;
+        /// <summary> Vertex shader position variable handle </summary>
+        private uint attribute_vpos;
+        /// <summary> Vertex shader model view handle </summary>
+        private int uniform_mview;
+        /// <summary> VBO position handle </summary>
+        /// <remarks> VBO = Vertex Buffer Object </remarks>
+        private uint vbo_position;
+        /// <summary> VBO color handle </summary>
+        /// <remarks> VBO = Vertex Buffer Object </remarks>
+        private uint vbo_color;
+        /// <summary> VBO model view handle </summary>
+        /// <remarks> VBO = Vertex Buffer Object </remarks>
+        private uint vbo_mview;
+        /// <summary>Vertex data used in tutorial</summary>
+        Vector3[] vertdata;
+        /// <summary>Color data used in tutorial</summary>
+        Vector3[] coldata;
+        /// <summary>Model view data used in tutorial</summary>
+        Matrix4[] mviewdata;
+
+
+
+        #region Original GL
         private uint texId;
         private uint vboId; //position bo
         private uint iboId; //index bo
@@ -60,6 +95,7 @@ namespace RLNET
         private RLResizeType resizeType;
         private int offsetX;
         private int offsetY;
+        #endregion
 
         public event UpdateEventHandler Render;
         public event UpdateEventHandler Update;
@@ -138,6 +174,7 @@ namespace RLNET
             //following four lines are an adhoc replacement for the above
             GameWindowSettings gws = new GameWindowSettings();
             gws.RenderFrequency = 30d; // Seems to be implied by a later call.
+            gws.UpdateFrequency = 30d;
             NativeWindowSettings nws = new NativeWindowSettings();
             nws.Size = new Vector2i((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale));
             window = new GameWindow(gws, nws);
@@ -171,6 +208,8 @@ namespace RLNET
         {
             EventArgs e = new EventArgs();
             window.VSync = VSyncMode.On;
+            InitGLProgram();
+            TutorialOnLoad();
             if (OnLoad != null) OnLoad(this, e);
         }
 
@@ -321,28 +360,33 @@ namespace RLNET
 
         private void CreateBuffers(int width, int height)
         {
+            /*The following buffer-related functions had to be updated to the new method*/
+            // Leaving some commented out old code for tracability now, should come back and clean up later.
             Vector2[] vertices = CreateVertices(width, height, charWidth, charHeight);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vboId);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * 2 * sizeof(float)), vertices, BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+            // Old: GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * 2 * sizeof(float)), vertices, BufferUsageHint.StaticDraw);
+            GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
 
+            
             texVertices = new Vector2[width * height * 4];
-            GL.BindBuffer(BufferTarget.ArrayBuffer, tcboId);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texVertices.Length * 2 * sizeof(float)), texVertices, BufferUsageHint.DynamicDraw);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
+            //GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texVertices.Length * 2 * sizeof(float)), texVertices, BufferUsageHint.DynamicDraw);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
 
             colorVertices = new Vector3[width * height * 4];
-            GL.BindBuffer(BufferTarget.ArrayBuffer, foreColorId);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(colorVertices.Length * 3 * sizeof(float)), colorVertices, BufferUsageHint.DynamicDraw);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, foreColorId);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
 
             backColorVertices = new Vector3[width * height * 4];
-            GL.BindBuffer(BufferTarget.ArrayBuffer, backColorId);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(backColorVertices.Length * 3 * sizeof(float)), backColorVertices, BufferUsageHint.DynamicDraw);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
 
             uint[] indices = CreateIndices(width * height);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, iboId);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, (IntPtr)(indices.Length * sizeof(uint)), indices, BufferUsageHint.StaticDraw);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
+            GL.BufferData(BufferTargetARB.ElementArrayBuffer, indices, BufferUsageARB.StaticDraw);
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
         }
 
         /// <summary>
@@ -395,12 +439,15 @@ namespace RLNET
 
         private void window_UpdateFrame(FrameEventArgs e)
         {
+            TutorialUpdateFrame();
             if (Update != null)
                 Update(this, new UpdateEventArgs(e.Time));
         }
 
+
         private void window_RenderFrame(FrameEventArgs e)
         {
+            TutorialRenderFrame();
             if (Render != null)
                 Render(this, new UpdateEventArgs(e.Time));
         }
@@ -420,7 +467,118 @@ namespace RLNET
         /// <summary>
         /// Draws the root console to the window.
         /// </summary>
+        /// <remarks>
+        /// This method had to be heavily revisited in the conversion to the .NET 5.0 version of OpenTK.
+        /// This is largely due to a revisiting of new openGL principles. <see cref="http://neokabuto.blogspot.com/2013/03/opentk-tutorial-2-drawing-triangle.html"/>
+        /// </remarks>
         public void Draw()
+        {
+            CellsToVertices();
+
+            //Clear
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-3, but should be added soon (I hope):
+            // GL.ClearColor(Color.Black);
+            GL.ClearColor(Color.Black.R, Color.Black.G, Color.Black.B, Color.Black.A);
+
+            //Set Projection
+            // Apparently, the following is no longer relevant:
+            /*
+            GL.MatrixMode(MatrixMode.Projection);
+            GL.LoadIdentity();
+            GL.Ortho(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
+            GL.MatrixMode(MatrixMode.Modelview);
+            GL.LoadIdentity();
+            */
+
+            //Setup States
+            GL.Enable(EnableCap.VertexArray);
+            GL.Enable(EnableCap.IndexArray);
+            GL.Enable(EnableCap.ColorArray);
+            GL.Enable(EnableCap.Blend);
+            GL.Disable(EnableCap.Lighting);
+            GL.Disable(EnableCap.DepthTest);
+            // GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
+            GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
+            GL.BindTexture(TextureTarget.Texture2d, texId);
+
+            // The following four lines aren't a part of the latest OpenGL.
+            // However, they may be safe to remove because they are tied to other commented out things.
+            /*GL.EnableClientState(ArrayCap.VertexArray);
+            GL.EnableClientState(ArrayCap.IndexArray);
+            GL.EnableClientState(ArrayCap.ColorArray);
+            GL.Scale(scale3);*/
+
+            //VBO (Vertex Buffer Object)
+            //Vertex Buffer
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+
+            // This is obsolete in this OpenGL version: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
+            // Needs to be replaced
+            //Index Buffer
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
+
+            //Back Color Draw
+            //Color Buffer
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
+            // This is obsolete in this OpenGL version: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
+            // Needs to be replaced
+            GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
+            //Draw Back Color
+            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+
+            //Fore Color / Texture Draw
+            //Texture Coord Buffer
+            GL.Enable(EnableCap.Texture2d);
+            // This is obsolete in this OpenGL version, however it may be safe to remove because
+            // it is tied to something else commented out: GL.EnableClientState(ArrayCap.TextureCoordArray);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
+            // This is obsolete in this OpenGL version: GL.TexCoordPointer(2, TexCoordPointerType.Float, 2 * sizeof(float), 0);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
+            //Color Buffer
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, foreColorId);
+            // This is obsolete in this OpenGL version: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
+            //Draw
+            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+
+            //Clean Up
+            GL.Disable(EnableCap.Texture2d);
+            // This is obsolete in this OpenGL version, however it may be safe to remove because
+            // it is tied to something else commented out:
+            /* GL.DisableClientState(ArrayCap.VertexArray);
+            GL.DisableClientState(ArrayCap.TextureCoordArray);
+            GL.DisableClientState(ArrayCap.IndexArray);
+            GL.DisableClientState(ArrayCap.ColorArray);*/
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+
+            window.SwapBuffers();
+        }
+
+        private void InitGLProgram()
+        {
+            // Initalize the program
+            pgmID = GL.CreateProgram();
+            // Load the shaders
+            LoadShader(VERTEX_SHADER_PATH, ShaderType.VertexShader, pgmID, out vsID);
+            LoadShader(FRAGMENT_SHADER_PATH, ShaderType.FragmentShader, pgmID, out fsID);
+            GL.LinkProgram(pgmID);
+
+            // Bind shader attributes to uint handles.
+            // Disagreement between tutorial here whether should be int or uint
+            attribute_vpos = (uint)GL.GetAttribLocation(pgmID, "vPosition");
+            attribute_vcol = (uint)GL.GetAttribLocation(pgmID, "vColor");
+            uniform_mview = GL.GetUniformLocation(pgmID, "modelview");
+
+
+            // Deviating from tutorial here:
+            GL.GenBuffer(out vbo_position);
+            GL.GenBuffer(out vbo_color);
+            GL.GenBuffer(out vbo_mview);
+        }
+
+        private void CellsToVertices()
         {
             float charU = (float)charWidth * uRatio;
             float charV = (float)charHeight * vRatio;
@@ -461,71 +619,6 @@ namespace RLNET
                     colorVertices[i + 3] = color;
                 }
             }
-
-            //Clear
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.ClearColor(Color.Black);
-
-            //Set Projection
-            GL.MatrixMode(MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-
-            //Setup States
-            GL.Enable(EnableCap.VertexArray);
-            GL.Enable(EnableCap.IndexArray);
-            GL.Enable(EnableCap.ColorArray);
-            GL.Enable(EnableCap.Blend);
-            GL.Disable(EnableCap.Lighting);
-            GL.Disable(EnableCap.DepthTest);
-            GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
-            GL.BindTexture(TextureTarget.Texture2D, texId);
-            GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.IndexArray);
-            GL.EnableClientState(ArrayCap.ColorArray);
-            GL.Scale(scale3);
-
-            //VBO
-            //Vertex Buffer
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vboId);
-            GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
-            //Index Buffer
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, iboId);
-
-            //Back Color Draw
-            //Color Buffer
-            GL.BindBuffer(BufferTarget.ArrayBuffer, backColorId);
-            GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(backColorVertices.Length * 3 * sizeof(float)), backColorVertices, BufferUsageHint.DynamicDraw);
-            //Draw Back Color
-            GL.DrawElements(BeginMode.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
-
-            //Fore Color / Texture Draw
-            //Texture Coord Buffer
-            GL.Enable(EnableCap.Texture2D);
-            GL.EnableClientState(ArrayCap.TextureCoordArray);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, tcboId);
-            GL.TexCoordPointer(2, TexCoordPointerType.Float, 2 * sizeof(float), 0);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texVertices.Length * 2 * sizeof(float)), texVertices, BufferUsageHint.DynamicDraw);
-            //Color Buffer
-            GL.BindBuffer(BufferTarget.ArrayBuffer, foreColorId);
-            GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(colorVertices.Length * 3 * sizeof(float)), colorVertices, BufferUsageHint.DynamicDraw);
-            //Draw
-            GL.DrawElements(BeginMode.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
-
-            //Clean Up
-            GL.Disable(EnableCap.Texture2D);
-            GL.DisableClientState(ArrayCap.VertexArray);
-            GL.DisableClientState(ArrayCap.TextureCoordArray);
-            GL.DisableClientState(ArrayCap.IndexArray);
-            GL.DisableClientState(ArrayCap.ColorArray);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
-
-            window.SwapBuffers();
         }
 
         private uint[] CreateIndices(int cellCount)
@@ -584,6 +677,7 @@ namespace RLNET
             texId = GL.GenTexture();
             GL.BindTexture(TextureTarget.Texture2d, texId);
 
+            // In order to use Bitmap in .NET 5.0, you need System.Drawing.Common
             Bitmap bmp = new Bitmap(filename);
             BitmapData bmpData = bmp.LockBits(
                 new System.Drawing.Rectangle(0, 0, bmp.Width, bmp.Height),
@@ -611,11 +705,86 @@ namespace RLNET
             System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
 
             //Create Texture
-            GL.TexImage2D(TextureTarget.Texture2d, 0, InternalFormat.Rgba, bmpData.Width, bmpData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
+            GL.TexImage2D(TextureTarget.Texture2d, 0, (int)InternalFormat.Rgba, bmpData.Width, bmpData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bmpData.Scan0);
             bmp.UnlockBits(bmpData);
 
-            GL.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-            GL.TexParameter(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+            GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+            GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+        }
+
+        private void LoadShader(string filename, ShaderType type, uint program, out uint address)
+        {
+            address = GL.CreateShader(type);
+            using (StreamReader sr = new StreamReader(filename))
+            {
+                GL.ShaderSource(address, sr.ReadToEnd());
+            }
+            GL.CompileShader(address);
+            GL.AttachShader(program, address);
+            // Console.WriteLine(GL.GetShaderInfoLog(address));
+        }
+
+        private void TutorialOnLoad()
+        {
+            vertdata = new Vector3[] { new Vector3(-0.8f, -0.8f, 0f),
+                new Vector3( 0.8f, -0.8f, 0f),
+                new Vector3( 0f,  0.8f, 0f)};
+
+
+            coldata = new Vector3[] { new Vector3(1f, 0f, 0f),
+                new Vector3( 0f, 0f, 1f),
+                new Vector3( 0f,  1f, 0f)};
+
+
+            mviewdata = new Matrix4[]{
+                Matrix4.Identity
+            };
+
+            GL.ClearColor(Color.CornflowerBlue.R, Color.CornflowerBlue.G, Color.CornflowerBlue.B, Color.CornflowerBlue.A);
+            GL.PointSize(5f);
+        }
+
+        private void TutorialUpdateFrame()
+        {
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vbo_position);
+            GL.BufferData<Vector3>(BufferTargetARB.ArrayBuffer, vertdata, BufferUsageARB.StaticDraw);
+            // 3 = attribute_vpos.count?
+            GL.VertexAttribPointer(attribute_vpos, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vbo_color);
+            GL.BufferData<Vector3>(BufferTargetARB.ArrayBuffer, coldata, BufferUsageARB.StaticDraw);
+            // 3 = attribute_vpos.count?
+            GL.VertexAttribPointer(attribute_vcol, 3, VertexAttribPointerType.Float, false, 0, 0);
+
+            // GL.UniformMatrix4(uniform_mview, false, ref mviewdata[0]);
+            // The above line doesn't work so I replaced it with the following:
+            Matrix4 m = mviewdata[0];
+            float[] matrixToArray = new float[] {
+                m.Column0.X, m.Column0.Y, m.Column0.Z, m.Column0.W,
+                m.Column1.X, m.Column1.Y, m.Column1.Z, m.Column1.W,
+                m.Column2.X, m.Column2.Y, m.Column2.Z, m.Column2.W,
+                m.Column3.X, m.Column3.Y, m.Column3.Z, m.Column3.W
+            };
+            GL.UniformMatrix4fv(uniform_mview, false, matrixToArray);
+
+            GL.UseProgram(pgmID);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+        }
+
+        private void TutorialRenderFrame()
+        {
+            GL.Viewport(0, 0, Width, Height);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            GL.Enable(EnableCap.DepthTest);
+
+            GL.EnableVertexAttribArray(attribute_vpos);
+            GL.EnableVertexAttribArray(attribute_vcol);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            GL.DisableVertexAttribArray(attribute_vpos);
+            GL.DisableVertexAttribArray(attribute_vcol);
+
+            GL.Flush();
+            window.SwapBuffers();
         }
     }
 }
