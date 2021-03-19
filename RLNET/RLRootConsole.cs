@@ -43,20 +43,6 @@ namespace RLNET
         private GameWindow window;
         private bool closed = false;
 
-        #region Tutorial Helpers
-        private readonly float[] _triangleVertices =
-        {
-            -0.5f, -0.5f, 0.0f, // Bottom-left vertex
-             0.5f, -0.5f, 0.0f, // Bottom-right vertex
-             0.0f,  0.5f, 0.0f  // Top vertex
-        };
-
-        private uint _vertexBufferObject;
-        private uint _vertexArrayObject;
-
-        private Shader _shader;
-        #endregion
-
         #region Original GL
         private uint texId;
         private uint vboId; //position bo
@@ -159,8 +145,7 @@ namespace RLNET
             gws.RenderFrequency = 30d; // Seems to be implied by a later call.
             gws.UpdateFrequency = 30d;
             NativeWindowSettings nws = new NativeWindowSettings();
-            //nws.Size = new Vector2i((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale));
-            nws.Size = new Vector2i(800, 600);
+            nws.Size = new Vector2i((int)(settings.Width * charWidth * scale), (int)(settings.Height * charHeight * scale));
             window = new GameWindow(gws, nws);
 
             window.WindowBorder = (WindowBorder)settings.WindowBorder;
@@ -180,7 +165,7 @@ namespace RLNET
             Keyboard = new RLKeyboard(window);
 
             // Will need to be uncommented when done messing with tutorial.
-            // InitGL(settings);
+            InitGL(settings);
         }
 
         private void InitGL(RLSettings settings)
@@ -198,8 +183,6 @@ namespace RLNET
         {
             EventArgs e = new EventArgs();
             window.VSync = VSyncMode.On;
-            LoadGL();
-            TutorialOnLoad();
             if (OnLoad != null) OnLoad(this, e);
         }
 
@@ -299,8 +282,7 @@ namespace RLNET
                 if (startup || width != Width || height != Height)
                 {
                     Resize(width, height);
-                    // TODO UNCOMMENT
-                    // CreateBuffers(width, height);
+                    CreateBuffers(width, height);
                     GL.Viewport(0, 0, (int)(Width * charWidth * scale), (int)(Height * charHeight * scale));
                     Mouse.Calibrate(charWidth, charHeight, offsetX, offsetY, scale);
                     if (OnResize != null) OnResize(this, new ResizeEventArgs(width, height));
@@ -383,7 +365,6 @@ namespace RLNET
         /// </summary>
         public void Run()
         {
-            //window.Run(fps);
             window.Run();
         }
 
@@ -428,7 +409,6 @@ namespace RLNET
 
         private void window_UpdateFrame(FrameEventArgs e)
         {
-            TutorialUpdateFrame();
             if (Update != null)
                 Update(this, new UpdateEventArgs(e.Time));
         }
@@ -436,14 +416,12 @@ namespace RLNET
 
         private void window_RenderFrame(FrameEventArgs e)
         {
-            TutorialRenderFrame();
             if (Render != null)
                 Render(this, new UpdateEventArgs(e.Time));
         }
 
         private void window_Closed()
         {
-            TutorialUnload();
             closed = true;
 
             GL.DeleteBuffer(vboId);
@@ -686,52 +664,6 @@ namespace RLNET
 
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-        }
-
-        /// <summary>
-        /// Helpful resource: <see href="https://github.com/opentk/LearnOpenTK/blob/master/Chapter1/2-HelloTriangle/Window.cs"/>
-        /// </summary>
-        private void TutorialOnLoad()
-        {
-            GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
-            _vertexBufferObject = GL.GenBuffer();
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, _vertexBufferObject);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, _triangleVertices, BufferUsageARB.StaticDraw);
-
-            _vertexArrayObject = GL.GenVertexArray();
-            GL.BindVertexArray(_vertexArrayObject);
-
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0); // Think of the last argument as "offset"
-
-            GL.EnableVertexAttribArray(0);
-
-            _shader = new Shader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
-            _shader.Use();
-        }
-
-        private void TutorialUpdateFrame()
-        {
-
-        }
-
-        private void TutorialRenderFrame()
-        {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            _shader.Use();
-            GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            window.SwapBuffers();
-        }
-
-        private void TutorialUnload()
-        {
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            GL.BindVertexArray(0);
-            GL.UseProgram(0);
-            GL.DeleteBuffer(_vertexBufferObject);
-            GL.DeleteVertexArray(_vertexArrayObject);
-            GL.DeleteProgram(_shader.Handle);
         }
     }
 }

@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 2012 for Windows Desktop
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLNET", "RLNET\RLNET.csproj", "{6EAB9AF3-893E-41AB-9E86-31DDDDC97B69}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31112.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLNET", "RLNET\RLNET.csproj", "{6EAB9AF3-893E-41AB-9E86-31DDDDC97B69}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RLNET.Sample", "RLNET.Sample\RLNET.Sample.csproj", "{34674F19-4D4F-498D-8A96-D0604CDFB9CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLNET.Sample", "RLNET.Sample\RLNET.Sample.csproj", "{34674F19-4D4F-498D-8A96-D0604CDFB9CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tutorial", "Tutorial\Tutorial\Tutorial.csproj", "{DB90C887-BC72-4588-AFCF-69293F9DDED6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,8 +23,15 @@ Global
 		{34674F19-4D4F-498D-8A96-D0604CDFB9CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34674F19-4D4F-498D-8A96-D0604CDFB9CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34674F19-4D4F-498D-8A96-D0604CDFB9CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DB90C887-BC72-4588-AFCF-69293F9DDED6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DB90C887-BC72-4588-AFCF-69293F9DDED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DB90C887-BC72-4588-AFCF-69293F9DDED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DB90C887-BC72-4588-AFCF-69293F9DDED6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D1677D63-01FB-461C-95A2-DA3D3562053C}
 	EndGlobalSection
 EndGlobal
