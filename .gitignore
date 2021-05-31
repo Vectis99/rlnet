@@ -82,3 +82,4 @@ packages/
 
 #Beyond Compare Ignores
 *.orig
+/.vs/RLNET/DesignTimeBuild/.dtbcache.v2

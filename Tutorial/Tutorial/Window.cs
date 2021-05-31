@@ -14,8 +14,8 @@ namespace Tutorial
     // OpenToolkit allows for several functions to be overriden to extend functionality; this is how we'll be writing code.
     public class Window : GameWindow
     {
-        private const string VERTEX_SHADER_PATH = "Shaders/vs.glsl";
-        private const string FRAGMENT_SHADER_PATH = "Shaders/fs.glsl";
+        private const string VERTEX_SHADER_PATH = "Shaders/shader.vert";
+        private const string FRAGMENT_SHADER_PATH = "Shaders/shader.frag";
 
         #region Tutorial Helpers
         private readonly float[] _triangleVertices =
@@ -44,7 +44,13 @@ namespace Tutorial
 
             _vertexBufferObject = GL.GenBuffer();
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, _vertexBufferObject);
+            //GL.BufferData(BufferTargetARB.ArrayBuffer, _triangleVertices.Length * sizeof(float), _triangleVertices, BufferUsageARB.StaticDraw);
             GL.BufferData(BufferTargetARB.ArrayBuffer, _triangleVertices, BufferUsageARB.StaticDraw);
+
+            // Debugging: Verify the values are saved. I can confirm they are.
+            // float[] readBack = new float[9];
+            // GL.GetBufferSubData<float>(BufferTargetARB.ArrayBuffer, (IntPtr)0, readBack);
+            
 
             _vertexArrayObject = GL.GenVertexArray();
             GL.BindVertexArray(_vertexArrayObject);
@@ -56,6 +62,18 @@ namespace Tutorial
             _shader = new Shader(VERTEX_SHADER_PATH, FRAGMENT_SHADER_PATH);
             _shader.Use();
             base.OnLoad();
+        }
+
+        protected override void OnRenderFrame(FrameEventArgs args)
+        {
+            GL.Clear(ClearBufferMask.ColorBufferBit);
+            _shader.Use();
+            GL.BindVertexArray(_vertexArrayObject);
+            
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            OpenTK.Graphics.OpenGL.ErrorCode e = GL.GetError();
+            SwapBuffers();
+            base.OnRenderFrame(args);
         }
 
         // This function runs on every update frame.
@@ -71,6 +89,12 @@ namespace Tutorial
             base.OnUpdateFrame(e);
         }
 
+        protected override void OnResize(ResizeEventArgs e)
+        {
+            GL.Viewport(0, 0, Size.X, Size.Y);
+            base.OnResize(e);
+        }
+
         protected override void OnUnload()
         {
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
@@ -82,14 +106,6 @@ namespace Tutorial
             base.OnUnload();
         }
 
-        protected override void OnRenderFrame(FrameEventArgs args)
-        {
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            _shader.Use();
-            GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            SwapBuffers();
-            base.OnRenderFrame(args);
-        }
+
     }
 }
