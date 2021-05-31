@@ -38,8 +38,6 @@ namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
-        private const string VERTEX_SHADER_PATH = "Shaders/vs.glsl";
-        private const string FRAGMENT_SHADER_PATH = "Shaders/fs.glsl";
         private GameWindow window;
         private bool closed = false;
 
@@ -164,7 +162,6 @@ namespace RLNET
             Mouse = new RLMouse(window);
             Keyboard = new RLKeyboard(window);
 
-            // Will need to be uncommented when done messing with tutorial.
             InitGL(settings);
         }
 
@@ -458,6 +455,7 @@ namespace RLNET
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
             */
+            // ^ However, I would like to verify that I have an appropriate substitute for the above.
 
             //Setup States
             GL.Enable(EnableCap.VertexArray);
@@ -483,6 +481,10 @@ namespace RLNET
 
             // This is obsolete in this OpenGL version: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
             // Needs to be replaced
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+            // TODO: Can't find a replacement for:
+            // GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
+
             //Index Buffer
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
 
@@ -490,7 +492,7 @@ namespace RLNET
             //Color Buffer
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
             // This is obsolete in this OpenGL version: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            // Needs to be replaced
+            // TODO: Yet to find a replacement for GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
             //Draw Back Color
             GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
@@ -522,14 +524,6 @@ namespace RLNET
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
 
             window.SwapBuffers();
-        }
-
-        /// <summary>
-        /// Loads all relevant items for OpenGL.
-        /// </summary>
-        private void LoadGL()
-        {
-
         }
 
         private void CellsToVertices()
