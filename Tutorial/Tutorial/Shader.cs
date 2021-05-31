@@ -73,11 +73,13 @@ namespace Tutorial
             // later.
 
             // First, we have to get the number of active uniforms in the shader.
-            // The following line from the tutorial didn't work: GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
-            // So instead, we use:
+            // At first, the following line from the tutorial didn't work: GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+            // However, updating OpenTK fixed this. So we no longer need the alternative:
+            // GL.GetProgramiv(Handle, ProgramPropertyARB.ActiveUniforms, ref numberOfUniforms);
+            // So instead, we use a mixture:
             int numberOfUniforms = 0;
-            GL.GetProgramiv(Handle, ProgramPropertyARB.ActiveUniforms, ref numberOfUniforms);
-
+            GL.GetProgrami(Handle, ProgramPropertyARB.ActiveUniforms, ref numberOfUniforms);
+            
             // Next, allocate the dictionary to hold the locations.
             _uniformLocations = new Dictionary<string, int>();
 
@@ -110,17 +112,22 @@ namespace Tutorial
             // Check for compilation errors
             int code = 0;
             // The following from the tutorial doesn't work: GL.GetShader(shader, ShaderParameter.CompileStatus, out var code);
+            // As before, changing OpenTK prereleases changed the best way to go about this.
             // So instead, we write:
-            GL.GetShaderiv(shader, ShaderParameterName.CompileStatus, ref code);
+            GL.GetShaderi(shader, ShaderParameterName.CompileStatus, ref code);
 
             if (code != (int)All.True)
             {
                 // We can use `GL.GetShaderInfoLog(shader)` to get information about the error.
                 // The following from the tutorial doesn't work: var infoLog = GL.GetShaderInfoLog(shader);
-                // So instead, w write:
-                string infoLog = "";
-                int length = 0;
-                GL.GetShaderInfoLog(shader, BUFFER_SIZE, ref length, out infoLog);
+                // OpenTK seems to have introduced a better way to do it than before:
+                /*
+                 * int length = 0;
+                 * GL.GetShaderInfoLog(shader, BUFFER_SIZE, ref length, out string infoLog);
+                 */
+                // So instead, we write:
+                GL.GetShaderInfoLog(shader, out string infoLog);
+
                 throw new Exception($"Error occurred whilst compiling Shader({shader}).\n\n{infoLog}");
             }
         }
@@ -132,9 +139,10 @@ namespace Tutorial
 
             // Check for linking errors
             // The following from the tutorial doesn't work: GL.GetProgram(program, GetProgramParameterName.LinkStatus, out var code);
+            // As before, changing OpenTK prereleases changed the best way to go about this.
             // So instead we write:
             int code = 0;
-            GL.GetProgramiv(program, ProgramPropertyARB.LinkStatus, ref code);
+            GL.GetProgrami(program, ProgramPropertyARB.LinkStatus, ref code);
             if (code != (int)All.True)
             {
                 // We can use `GL.GetProgramInfoLog(program)` to get information about the error.
@@ -200,19 +208,21 @@ namespace Tutorial
         ///   The matrix is transposed before being sent to the shader.
         ///   </para>
         /// </remarks>
-        public void SetMatrix4(string name, Matrix4 data)
+        public void SetMatrix4(string name, Matrix4d data)
         {
             GL.UseProgram(Handle);
             // The following from the tutorial doesn't work: GL.UniformMatrix4(_uniformLocations[name], true, ref data);
+            // As before, changing OpenTK prereleases changed the best way to go about this.
             // So instead, we write:
-            Span<float> matrixSpan = new float[]
+            /*Span<float> matrixSpan = new float[]
             {
                 data.M11, data.M12, data.M13, data.M14,
                 data.M21, data.M22, data.M23, data.M24,
                 data.M31, data.M32, data.M33, data.M34,
                 data.M41, data.M42, data.M43, data.M44
             };
-            GL.UniformMatrix4fv(_uniformLocations[name], true, matrixSpan);
+            GL.UniformMatrix4fv(_uniformLocations[name], true, matrixSpan);*/
+            GL.UniformMatrix4d(_uniformLocations[name], true, in data);
         }
 
         /// <summary>

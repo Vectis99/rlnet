@@ -36,7 +36,7 @@
     <None Include="RLNET.nuspec" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="OpenTK" Version="5.0.0-pre.3" />
+    <PackageReference Include="OpenTK" Version="5.0.0-pre.5" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.2.21154.6" />
   </ItemGroup>
   <ItemGroup>
