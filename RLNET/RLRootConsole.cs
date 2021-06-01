@@ -594,7 +594,7 @@ namespace RLNET
             GL.EnableVertexAttribArray(vertexCoordinateAttributeLocation);
             GL.VertexAttribPointer(vertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
 
-            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTextCoord");
+            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord");
             GL.EnableVertexAttribArray(textureCoordinateAttributeLocation);
             GL.VertexAttribPointer(textureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
 
@@ -735,9 +735,9 @@ namespace RLNET
             {
                 /*if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
                     rgbValues[i + 3] = 0;*/
-                rgbValues[i] = 25;
-                rgbValues[i + 1] = 100;
-                rgbValues[i + 2] = 10;
+                rgbValues[i] = (byte)((i + 25) % 255);
+                rgbValues[i + 1] = (byte)((i + 100) % 255);
+                rgbValues[i + 2] = (byte)((i + 10) % 255);
                 // rgbValues[i + 3] = 1;
             }
 
