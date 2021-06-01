@@ -174,16 +174,26 @@ namespace RLNET
             InitGL(settings);
         }
 
+        /// <summary>
+        /// Initalize the OpenGL context of the application.
+        /// </summary>
+        /// <param name="settings"></param>
         private void InitGL(RLSettings settings)
         {
+            // 1. Load the shader.
             shader = new Shader(VertexPath, FragmentPath);
+
+            
+            // 2. Instantiate the Vertex Array Object (VAO)
             VertexArrayObject = GL.GenVertexArray();
+            // 3. Load the glyph texture file.
             LoadTexture2d(settings.BitmapFile);
             vboId = GL.GenBuffer();
             iboId = GL.GenBuffer();
             tcboId = GL.GenBuffer();
             foreColorId = GL.GenBuffer();
             backColorId = GL.GenBuffer();
+            // 6. Generate a window (performs additional GL initalization!)
             CalcWindow(true);
         }
 
@@ -340,6 +350,11 @@ namespace RLNET
             }
         }
 
+        /// <summary>
+        /// Populate all OpenGL buffers with dummy data.
+        /// </summary>
+        /// <param name="width">The width of the canvas.</param>
+        /// <param name="height">The height of the canvas.</param>
         private void CreateBuffers(int width, int height)
         {
             /*The following buffer-related functions had to be updated to the new method*/
@@ -363,6 +378,7 @@ namespace RLNET
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, indices, BufferUsageARB.StaticDraw);
 
+            // Unbinding:
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
         }

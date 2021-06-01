@@ -12,6 +12,9 @@ namespace RLNET
     /// <summary>
     /// https://github.com/opentk/LearnOpenTK/blob/master/Common/Texture.cs
     /// </summary>
+    /// <remarks>
+    /// May eventually serve as a good alternative to the monstrosity in <see cref="RLRootConsole"/>.
+    /// </remarks>
     public class Texture
     {
         public readonly uint Handle;

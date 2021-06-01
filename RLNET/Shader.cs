@@ -90,11 +90,6 @@ namespace RLNET
             }
         }
 
-        private void CalculateUniformLocations()
-        {
-
-        }
-
         /// <summary> Use the shader. </summary>
         public void Use()
         {
@@ -103,12 +98,16 @@ namespace RLNET
 
         /// <summary>
         /// Gets the location of a vertex attribute.
+        /// IMPORTANT: if this is -1 but it shouldn't be, it means the optimizer optimized out the attribute. Check your shader code to see why.
         /// </summary>
         /// <param name="attribName">The name of the vertex attribute to get.</param>
         /// <returns>The index of the attribute</returns>
         public uint GetAttribLocation(string attribName)
         {
-            return (uint)GL.GetAttribLocation(Handle, attribName);
+            int loc = GL.GetAttribLocation(Handle, attribName);
+            uint locAsUint = (uint)loc;
+            var tmp = GL.GetError();
+            return locAsUint;
         }
 
         /// <summary>
@@ -147,6 +146,7 @@ namespace RLNET
                 data.M31, data.M32, data.M33, data.M34,
                 data.M41, data.M42, data.M43, data.M44
             };
+            // This line will throw an exception if your shader failed to compile. For some reason.
             GL.UniformMatrix4f(_uniformLocations[name], 1, false, matrixSpan);
             // This single line means the entire project has to be compiled as "unsafe".
             // Worth keeping around as proof of my pain.
