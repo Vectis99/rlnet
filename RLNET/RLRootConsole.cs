@@ -448,6 +448,7 @@ namespace RLNET
         /// This method had to be heavily revisited in the conversion to the .NET 5.0 version of OpenTK.
         /// This is largely due to a revisiting of new openGL principles. <see href="http://neokabuto.blogspot.com/2013/03/opentk-tutorial-2-drawing-triangle.html"/>.
         /// While working on this, I transitioned to a later tutorial which uses the latest specification: <see href="https://opentk.net/learn/chapter1/2-hello-triangle.html"/>.
+        /// Handy boilerplate code reference: https://opentk.net/learn/chapter1/4-shaders.html
         /// </remarks>
         public void Draw()
         {
@@ -489,16 +490,16 @@ namespace RLNET
             // In the following section, I believe the reason we don't often have to call GL.BufferData
             // is because this is handled in the method CellsToVertices();
 
-            // GL.Bufferdata() is called in CreateBuffers(). This might not be right.
+            // GL.BufferData() is called in CreateBuffers(). This might not be right.
 
             //VBO (Vertex Buffer Object)
             //Vertex Buffer
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // TODO: Can't find a replacement for: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
-            // TODO Maybe?:
+            // Originally: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
             // uint index refers to vs.glsl's contents (layout(location = 0)).
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0); // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
+            // To be determined: Attributes "size" and "stride".
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0); // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
             GL.EnableVertexAttribArray(0);
             shader.Use();
             
@@ -511,7 +512,7 @@ namespace RLNET
             // TODO: Can't find a replacement for GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
             //Draw Back Color
-            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0); // why *6?
 
             //Fore Color / Texture Draw
             //Texture Coord Buffer
@@ -527,7 +528,8 @@ namespace RLNET
             GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
 
             // Draw???
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            // The following doesn't seem to do anything:
+            // GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
             //Clean Up
             GL.Disable(EnableCap.Texture2d);
