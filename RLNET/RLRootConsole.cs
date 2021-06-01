@@ -38,6 +38,18 @@ namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
+        float[] texturedRectancle ={
+            128, 128, 1, 1,
+            128, 16, 1, 0,
+            16, 16, 0, 0,
+            16, 128, 0, 1
+        };
+        uint[] texturedRectangleIndices =
+        {
+            0, 1, 3,
+            1, 2, 3
+        };
+
         private const string VertexPath = "Shaders/vs.glsl";
         private const string FragmentPath = "Shaders/fs.glsl";
         private GameWindow window;
@@ -45,8 +57,8 @@ namespace RLNET
 
         #region Original GL
         private uint texId;
-        private uint vboId; //position bo
-        private uint iboId; //index bo
+        private uint VertexBufferObject; //position bo
+        private uint ElementBufferObject; //index bo
         private uint tcboId; //tex coord bo
         private uint foreColorId; //color3 bo
         private uint backColorId; //color3 bo
@@ -174,17 +186,46 @@ namespace RLNET
             InitGL(settings);
         }
 
+        /// <summary>
+        /// Initalize the OpenGL context of the application.
+        /// </summary>
+        /// <param name="settings"></param>
         private void InitGL(RLSettings settings)
         {
+            // 1. Load the shader.
             shader = new Shader(VertexPath, FragmentPath);
+
+            
+            // 2. Instantiate the Vertex Array Object (VAO)
             VertexArrayObject = GL.GenVertexArray();
+            // 3. Load the glyph texture file.
             LoadTexture2d(settings.BitmapFile);
-            vboId = GL.GenBuffer();
-            iboId = GL.GenBuffer();
+            // 4. Load the Vertex Buffer Object (VBO) and Element Buffer Object (IBO)
+            VertexBufferObject = GL.GenBuffer(); // VBO
+            ElementBufferObject = GL.GenBuffer(); // IBO
+            // 5. Load the Texture, foreground, and background color buffers.
             tcboId = GL.GenBuffer();
             foreColorId = GL.GenBuffer();
             backColorId = GL.GenBuffer();
+            // 6. Generate a window (performs additional GL initalization!)
             CalcWindow(true);
+            
+            // 7. Additional shader work:
+            int vertexShaderStride = 4 * sizeof(float); // 5 shouldn't be hardcoded...
+
+            uint vertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
+            GL.EnableVertexAttribArray(vertexCoordinateAttributeLocation);
+            GL.VertexAttribPointer(vertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
+
+            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord"); // don't mispell this as "aTextCoord", save yourself 10k hours.
+            GL.EnableVertexAttribArray(textureCoordinateAttributeLocation);
+            GL.VertexAttribPointer(textureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
+
+            ErrorCode tmp = GL.GetError();
+
+            // 8. Set the default clear color.
+            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
+            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
         }
 
         void window_Load()
@@ -331,8 +372,8 @@ namespace RLNET
             if (!closed)
             {
                 // TODO: Might not be the right way to delete buffers according to: https://opentk.net/learn/chapter1/2-hello-triangle.html
-                GL.DeleteBuffer(vboId);
-                GL.DeleteBuffer(iboId);
+                GL.DeleteBuffer(VertexBufferObject);
+                GL.DeleteBuffer(ElementBufferObject);
                 GL.DeleteBuffer(tcboId);
                 GL.DeleteBuffer(foreColorId);
                 GL.DeleteBuffer(backColorId);
@@ -340,11 +381,16 @@ namespace RLNET
             }
         }
 
+        /// <summary>
+        /// Populate all OpenGL buffers with dummy data.
+        /// </summary>
+        /// <param name="width">The width of the canvas.</param>
+        /// <param name="height">The height of the canvas.</param>
         private void CreateBuffers(int width, int height)
         {
             /*The following buffer-related functions had to be updated to the new method*/
             Vector2[] vertices = CreateVertices(width, height, charWidth, charHeight);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, VertexBufferObject);
             GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
 
             texVertices = new Vector2[width * height * 4];
@@ -360,9 +406,10 @@ namespace RLNET
             GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
 
             uint[] indices = CreateIndices(width * height);
-            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, ElementBufferObject);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, indices, BufferUsageARB.StaticDraw);
 
+            // Unbinding:
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
         }
@@ -456,9 +503,7 @@ namespace RLNET
 
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
-            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
-
+            
             #region Static Pipeline Projection Setting
             //Set Projection
             // The old static method (bad):
@@ -478,8 +523,6 @@ namespace RLNET
             shader.SetMatrix4("view", Matrix4.Identity);
             shader.SetMatrix4("projection", Matrix4.Identity);
 
-
-            //Setup States
             GL.Enable(EnableCap.VertexArray);
             GL.Enable(EnableCap.IndexArray);
             GL.Enable(EnableCap.ColorArray);
@@ -488,7 +531,6 @@ namespace RLNET
             GL.Disable(EnableCap.DepthTest);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.BindTexture(TextureTarget.Texture2d, texId);
-
             #region Half-broken Static Pipeline
             /*
             // The following four lines aren't a part of the latest OpenGL.
@@ -551,60 +593,19 @@ namespace RLNET
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);*/
             #endregion
-
             GL.BindVertexArray(VertexArrayObject);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            #region Triangle 
-            // Sloppy test code.
-            /*Vector2[] vertices = {
-                new Vector2(-0.5f, -0.5f), //Bottom-left vertex
-                new Vector2(0.5f, -0.5f), //Bottom-right vertex
-                new Vector2(0.0f,  0.5f) //Top vertex
-            };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);*/
-            /*Vector2[] bigTriangle = {
-                new Vector2(20, 20), //Bottom-left vertex
-                new Vector2(40, 20), //Bottom-right vertex
-                new Vector2(30, 40) //Top vertex
-            };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, bigTriangle, BufferUsageARB.StaticDraw);*/
-            float[] texturedRectancle ={
-                128, 128, 1, 1,
-                128, 16, 1, 0,
-                16, 16, 0, 0,
-                16, 128, 0, 1
-            };
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, VertexBufferObject);
             GL.BufferData(BufferTargetARB.ArrayBuffer, texturedRectancle, BufferUsageARB.StaticDraw);
 
-            uint[] texturedRectangleIndices =
-            {
-                0, 1, 3,
-                1, 2, 3
-            };
-            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, ElementBufferObject);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, texturedRectangleIndices, BufferUsageARB.StaticDraw);
 
-            #endregion
-            // Array management 
-
-            int vertexShaderStride = 4 * sizeof(float); // 5 shouldn't be hardcoded...
-
-            // TODO: Get attribute location should be called once instead of every render frame.
-            uint vertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
-            GL.EnableVertexAttribArray(vertexCoordinateAttributeLocation);
-            GL.VertexAttribPointer(vertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
-
-            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTextCoord");
-            GL.EnableVertexAttribArray(textureCoordinateAttributeLocation);
-            GL.VertexAttribPointer(textureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
-
-            GL.BindVertexArray(VertexArrayObject);
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2d, texId);
             shader.Use();
-            // Old: GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            // New?: GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
+
             GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
+
 
             window.SwapBuffers();
         }
@@ -733,12 +734,14 @@ namespace RLNET
             int g = rgbValues[2];
             for (int i = 0; i < rgbValues.Length; i += 4)
             {
-                /*if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
-                    rgbValues[i + 3] = 0;*/
-                rgbValues[i] = 25;
-                rgbValues[i + 1] = 100;
-                rgbValues[i + 2] = 10;
-                // rgbValues[i + 3] = 1;
+                // Temporary rainbow
+                rgbValues[i] = (byte)((i + 127) % 255);
+                rgbValues[i + 1] = (byte)((i + 127) % 255);
+                rgbValues[i  + 2] = (byte)((i + 127) % 255);
+                // if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
+                //    rgbValues[i + 3] = 0;
+                // Quick way to check and see if you're loading the texture you expect: set a breakpoint here
+                // var tmp = new int[] { rgbValues[i], rgbValues[i+1], rgbValues[i+2], rgbValues[i+3] };
             }
 
             System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
