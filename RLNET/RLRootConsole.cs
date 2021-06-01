@@ -69,6 +69,8 @@ namespace RLNET
         #region New GL
         /// <summary> The shader to draw tiles with. </summary>
         Shader shader;
+
+        uint VertexArrayObject;
         #endregion
 
         public event UpdateEventHandler Render;
@@ -175,6 +177,7 @@ namespace RLNET
         private void InitGL(RLSettings settings)
         {
             shader = new Shader(VertexPath, FragmentPath);
+            VertexArrayObject = GL.GenVertexArray();
             LoadTexture2d(settings.BitmapFile);
             vboId = GL.GenBuffer();
             iboId = GL.GenBuffer();
@@ -490,12 +493,12 @@ namespace RLNET
 
             //VBO (Vertex Buffer Object)
             //Vertex Buffer
+            GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
             // TODO: Can't find a replacement for: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
             // TODO Maybe?:
             // uint index refers to vs.glsl's contents (layout(location = 0)).
-            // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0); // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
             GL.EnableVertexAttribArray(0);
             shader.Use();
             
@@ -522,6 +525,9 @@ namespace RLNET
             GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
             //Draw
             GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
+
+            // Draw???
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
             //Clean Up
             GL.Disable(EnableCap.Texture2d);
