@@ -733,8 +733,12 @@ namespace RLNET
             int g = rgbValues[2];
             for (int i = 0; i < rgbValues.Length; i += 4)
             {
-                if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
-                    rgbValues[i + 3] = 0;
+                /*if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
+                    rgbValues[i + 3] = 0;*/
+                rgbValues[i] = 25;
+                rgbValues[i + 1] = 100;
+                rgbValues[i + 2] = 10;
+                // rgbValues[i + 3] = 1;
             }
 
             System.Runtime.InteropServices.Marshal.Copy(rgbValues, 0, ptr, bytes);
