@@ -472,6 +472,13 @@ namespace RLNET
             // ^ However, I would like to verify that I have an appropriate substitute for the above. Seems I don't...
             #endregion
 
+            // Orthographic Projection:
+            Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
+            shader.SetMatrix4("model", model);
+            shader.SetMatrix4("view", Matrix4.Identity);
+            shader.SetMatrix4("projection", Matrix4.Identity);
+
+
             //Setup States
             GL.Enable(EnableCap.VertexArray);
             GL.Enable(EnableCap.IndexArray);
@@ -547,14 +554,6 @@ namespace RLNET
 
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // TEMP
-            Vector2[] vertices = {
-                new Vector2(-0.5f, -0.5f), //Bottom-left vertex
-                new Vector2(0.5f, -0.5f), //Bottom-right vertex
-                new Vector2(0.0f,  0.5f) //Top vertex
-            };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
-            // END TEMP
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
