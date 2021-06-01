@@ -137,7 +137,7 @@ namespace RLNET
                 data.M31, data.M32, data.M33, data.M34,
                 data.M41, data.M42, data.M43, data.M44
             };
-            GL.UniformMatrix4f(_uniformLocations[name], 1, true, matrixSpan);
+            GL.UniformMatrix4f(_uniformLocations[name], 1, false, matrixSpan);
             // This single line means the entire project has to be compiled as "unsafe".
             // Worth keeping around as proof of my pain.
             /*unsafe

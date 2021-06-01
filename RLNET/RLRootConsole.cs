@@ -473,7 +473,12 @@ namespace RLNET
             #endregion
 
             // Orthographic Projection:
-            Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
+            // Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
+            // Matrix4 model = Matrix4.CreateOrthographicOffCenter(0.0f, 20.0f, 0.0f, 20.0f, -0.1f, 100.0f);
+            Matrix4 model = Matrix4.CreateOrthographicOffCenter(-1f, 5f, -1f, 5f, -1f, 1f);
+            // Matrix4 model = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-55.0f));
+            // Matrix4 view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
+            // Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Width / Height, 0.1f, 100.0f);
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", Matrix4.Identity);
             shader.SetMatrix4("projection", Matrix4.Identity);
@@ -554,6 +559,14 @@ namespace RLNET
 
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+            #region Triangle
+            Vector2[] vertices = {
+                new Vector2(-0.5f, -0.5f), //Bottom-left vertex
+                new Vector2(0.5f, -0.5f), //Bottom-right vertex
+                new Vector2(0.0f,  0.5f) //Top vertex
+            };
+            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
+            #endregion
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
