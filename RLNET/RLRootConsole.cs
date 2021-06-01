@@ -461,7 +461,7 @@ namespace RLNET
 
             #region Static Pipeline Projection Setting
             //Set Projection
-            // Apparently, the following is no longer relevant:
+            // The old static method (bad):
             /*
             GL.MatrixMode(MatrixMode.Projection);
             GL.LoadIdentity();
@@ -473,12 +473,7 @@ namespace RLNET
             #endregion
 
             // Orthographic Projection:
-            // Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
-            // Matrix4 model = Matrix4.CreateOrthographicOffCenter(0.0f, 20.0f, 0.0f, 20.0f, -0.1f, 100.0f);
-            Matrix4 model = Matrix4.CreateOrthographicOffCenter(-1f, 5f, -1f, 5f, -1f, 1f);
-            // Matrix4 model = Matrix4.CreateRotationX(MathHelper.DegreesToRadians(-55.0f));
-            // Matrix4 view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            // Matrix4 projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45.0f), Width / Height, 0.1f, 100.0f);
+            Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", Matrix4.Identity);
             shader.SetMatrix4("projection", Matrix4.Identity);
@@ -560,12 +555,18 @@ namespace RLNET
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
             #region Triangle
-            Vector2[] vertices = {
+            /*Vector2[] vertices = {
                 new Vector2(-0.5f, -0.5f), //Bottom-left vertex
                 new Vector2(0.5f, -0.5f), //Bottom-right vertex
                 new Vector2(0.0f,  0.5f) //Top vertex
             };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);*/
+            Vector2[] bigTriangle = {
+                new Vector2(20, 20), //Bottom-left vertex
+                new Vector2(40, 20), //Bottom-right vertex
+                new Vector2(30, 40) //Top vertex
+            };
+            GL.BufferData(BufferTargetARB.ArrayBuffer, bigTriangle, BufferUsageARB.StaticDraw);
             #endregion
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);

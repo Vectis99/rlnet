@@ -2,6 +2,8 @@
  
 layout(location = 0) in vec2 aPosition;
 // color, texture...
+
+// Transformation: https://opentk.net/learn/chapter1/8-coordinate-systems.html
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
