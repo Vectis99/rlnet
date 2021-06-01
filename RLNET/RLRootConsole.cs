@@ -38,6 +38,8 @@ namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
+        private const string VertexPath = "Shaders/vs.glsl";
+        private const string FragmentPath = "Shaders/fs.glsl";
         private GameWindow window;
         private bool closed = false;
 
@@ -62,6 +64,11 @@ namespace RLNET
         private RLResizeType resizeType;
         private int offsetX;
         private int offsetY;
+        #endregion
+
+        #region New GL
+        /// <summary> The shader to draw tiles with. </summary>
+        Shader shader;
         #endregion
 
         public event UpdateEventHandler Render;
@@ -167,6 +174,7 @@ namespace RLNET
 
         private void InitGL(RLSettings settings)
         {
+            shader = new Shader(VertexPath, FragmentPath);
             LoadTexture2d(settings.BitmapFile);
             vboId = GL.GenBuffer();
             iboId = GL.GenBuffer();
@@ -185,6 +193,8 @@ namespace RLNET
 
         void window_Closing(System.ComponentModel.CancelEventArgs e)
         {
+            // Might be a better place to put this:
+            shader.Dispose();
             if (OnClosing != null) OnClosing(this, e);
         }
 
@@ -317,6 +327,7 @@ namespace RLNET
 
             if (!closed)
             {
+                // TODO: Might not be the right way to delete buffers according to: https://opentk.net/learn/chapter1/2-hello-triangle.html
                 GL.DeleteBuffer(vboId);
                 GL.DeleteBuffer(iboId);
                 GL.DeleteBuffer(tcboId);
@@ -329,16 +340,12 @@ namespace RLNET
         private void CreateBuffers(int width, int height)
         {
             /*The following buffer-related functions had to be updated to the new method*/
-            // Leaving some commented out old code for tracability now, should come back and clean up later.
             Vector2[] vertices = CreateVertices(width, height, charWidth, charHeight);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // Old: GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(vertices.Length * 2 * sizeof(float)), vertices, BufferUsageHint.StaticDraw);
             GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
 
-            
             texVertices = new Vector2[width * height * 4];
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
-            //GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(texVertices.Length * 2 * sizeof(float)), texVertices, BufferUsageHint.DynamicDraw);
             GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
 
             colorVertices = new Vector3[width * height * 4];
@@ -421,12 +428,14 @@ namespace RLNET
         {
             closed = true;
 
-            GL.DeleteBuffer(vboId);
+            // TODO: Might not be the right way to delete buffers according to: https://opentk.net/learn/chapter1/2-hello-triangle.html
+            // Either that, or I'm redundant here with elsewhere, which seems more likely.
+            /* GL.DeleteBuffer(vboId);
             GL.DeleteBuffer(iboId);
             GL.DeleteBuffer(tcboId);
             GL.DeleteBuffer(foreColorId);
             GL.DeleteBuffer(backColorId);
-            GL.DeleteTexture(texId);
+            GL.DeleteTexture(texId);*/
         }
 
         /// <summary>
@@ -434,7 +443,8 @@ namespace RLNET
         /// </summary>
         /// <remarks>
         /// This method had to be heavily revisited in the conversion to the .NET 5.0 version of OpenTK.
-        /// This is largely due to a revisiting of new openGL principles. <see cref="http://neokabuto.blogspot.com/2013/03/opentk-tutorial-2-drawing-triangle.html"/>
+        /// This is largely due to a revisiting of new openGL principles. <see href="http://neokabuto.blogspot.com/2013/03/opentk-tutorial-2-drawing-triangle.html"/>.
+        /// While working on this, I transitioned to a later tutorial which uses the latest specification: <see href="https://opentk.net/learn/chapter1/2-hello-triangle.html"/>.
         /// </remarks>
         public void Draw()
         {
@@ -442,9 +452,8 @@ namespace RLNET
 
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-3, but should be added soon (I hope):
-            // GL.ClearColor(Color.Black);
-            GL.ClearColor(Color.Black.R, Color.Black.G, Color.Black.B, Color.Black.A);
+            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
+            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A);
 
             //Set Projection
             // Apparently, the following is no longer relevant:
@@ -455,7 +464,8 @@ namespace RLNET
             GL.MatrixMode(MatrixMode.Modelview);
             GL.LoadIdentity();
             */
-            // ^ However, I would like to verify that I have an appropriate substitute for the above.
+            // ^ However, I would like to verify that I have an appropriate substitute for the above. Seems I don't...
+
 
             //Setup States
             GL.Enable(EnableCap.VertexArray);
@@ -464,35 +474,38 @@ namespace RLNET
             GL.Enable(EnableCap.Blend);
             GL.Disable(EnableCap.Lighting);
             GL.Disable(EnableCap.DepthTest);
-            // GL.BlendFunc(BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.BindTexture(TextureTarget.Texture2d, texId);
 
             // The following four lines aren't a part of the latest OpenGL.
-            // However, they may be safe to remove because they are tied to other commented out things.
             /*GL.EnableClientState(ArrayCap.VertexArray);
             GL.EnableClientState(ArrayCap.IndexArray);
             GL.EnableClientState(ArrayCap.ColorArray);
             GL.Scale(scale3);*/
 
+            // In the following section, I believe the reason we don't often have to call GL.BufferData
+            // is because this is handled in the method CellsToVertices();
+
+            // GL.Bufferdata() is called in CreateBuffers(). This might not be right.
+
             //VBO (Vertex Buffer Object)
             //Vertex Buffer
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-
-            // This is obsolete in this OpenGL version: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
-            // Needs to be replaced
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // TODO: Can't find a replacement for:
-            // GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
-
+            // TODO: Can't find a replacement for: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
+            // TODO Maybe?:
+            // uint index refers to vs.glsl's contents (layout(location = 0)).
+            // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+            shader.Use();
+            
             //Index Buffer
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
 
             //Back Color Draw
             //Color Buffer
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
-            // This is obsolete in this OpenGL version: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            // TODO: Yet to find a replacement for GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
+            // TODO: Can't find a replacement for GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
             //Draw Back Color
             GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
@@ -500,14 +513,12 @@ namespace RLNET
             //Fore Color / Texture Draw
             //Texture Coord Buffer
             GL.Enable(EnableCap.Texture2d);
-            // This is obsolete in this OpenGL version, however it may be safe to remove because
-            // it is tied to something else commented out: GL.EnableClientState(ArrayCap.TextureCoordArray);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
-            // This is obsolete in this OpenGL version: GL.TexCoordPointer(2, TexCoordPointerType.Float, 2 * sizeof(float), 0);
+            // TODO: Can't find a replacement for: GL.TexCoordPointer(2, TexCoordPointerType.Float, 2 * sizeof(float), 0);
             GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
             //Color Buffer
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, foreColorId);
-            // This is obsolete in this OpenGL version: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
+            // TODO: Can't find a replacement for: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
             GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
             //Draw
             GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);

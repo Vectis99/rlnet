@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLNET", "RLNET\RLNET.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RLNET.Sample", "RLNET.Sample\RLNET.Sample.csproj", "{34674F19-4D4F-498D-8A96-D0604CDFB9CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tutorial", "Tutorial\Tutorial\Tutorial.csproj", "{DB90C887-BC72-4588-AFCF-69293F9DDED6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tutorial", "Tutorial\Tutorial\Tutorial.csproj", "{DB90C887-BC72-4588-AFCF-69293F9DDED6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
