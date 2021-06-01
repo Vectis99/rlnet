@@ -472,7 +472,6 @@ namespace RLNET
             // ^ However, I would like to verify that I have an appropriate substitute for the above. Seems I don't...
             #endregion
 
-
             //Setup States
             GL.Enable(EnableCap.VertexArray);
             GL.Enable(EnableCap.IndexArray);
@@ -482,8 +481,6 @@ namespace RLNET
             GL.Disable(EnableCap.DepthTest);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.BindTexture(TextureTarget.Texture2d, texId);
-
-
 
             #region Half-broken Static Pipeline
             /*
@@ -547,6 +544,16 @@ namespace RLNET
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);*/
             #endregion
+
+            GL.BindVertexArray(VertexArrayObject);
+            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
+            // Do not buffer data?
+            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
+            shader.Use();
+            GL.BindVertexArray(VertexArrayObject); // Redundant?
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
             window.SwapBuffers();
         }
