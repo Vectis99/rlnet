@@ -547,7 +547,14 @@ namespace RLNET
 
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // Do not buffer data?
+            // TEMP
+            Vector2[] vertices = {
+                new Vector2(-0.5f, -0.5f), //Bottom-left vertex
+                new Vector2(0.5f, -0.5f), //Bottom-right vertex
+                new Vector2(0.0f,  0.5f) //Top vertex
+            };
+            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
+            // END TEMP
             GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
