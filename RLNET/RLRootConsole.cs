@@ -459,6 +459,7 @@ namespace RLNET
             // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
             GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A);
 
+            #region Static Pipeline Projection Setting
             //Set Projection
             // Apparently, the following is no longer relevant:
             /*
@@ -469,6 +470,7 @@ namespace RLNET
             GL.LoadIdentity();
             */
             // ^ However, I would like to verify that I have an appropriate substitute for the above. Seems I don't...
+            #endregion
 
 
             //Setup States
@@ -481,17 +483,20 @@ namespace RLNET
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
             GL.BindTexture(TextureTarget.Texture2d, texId);
 
+
+
+            #region Half-broken Static Pipeline
+            /*
             // The following four lines aren't a part of the latest OpenGL.
-            /*GL.EnableClientState(ArrayCap.VertexArray);
-            GL.EnableClientState(ArrayCap.IndexArray);
-            GL.EnableClientState(ArrayCap.ColorArray);
-            GL.Scale(scale3);*/
+            //GL.EnableClientState(ArrayCap.VertexArray);
+            //GL.EnableClientState(ArrayCap.IndexArray);
+            //GL.EnableClientState(ArrayCap.ColorArray);
+            //GL.Scale(scale3);
 
             // In the following section, I believe the reason we don't often have to call GL.BufferData
             // is because this is handled in the method CellsToVertices();
 
             // GL.BufferData() is called in CreateBuffers(). This might not be right.
-
             //VBO (Vertex Buffer Object)
             //Vertex Buffer
             GL.BindVertexArray(VertexArrayObject);
@@ -535,12 +540,13 @@ namespace RLNET
             GL.Disable(EnableCap.Texture2d);
             // This is obsolete in this OpenGL version, however it may be safe to remove because
             // it is tied to something else commented out:
-            /* GL.DisableClientState(ArrayCap.VertexArray);
-            GL.DisableClientState(ArrayCap.TextureCoordArray);
-            GL.DisableClientState(ArrayCap.IndexArray);
-            GL.DisableClientState(ArrayCap.ColorArray);*/
+            // GL.DisableClientState(ArrayCap.VertexArray);
+            // GL.DisableClientState(ArrayCap.TextureCoordArray);
+            // GL.DisableClientState(ArrayCap.IndexArray);
+            // GL.DisableClientState(ArrayCap.ColorArray);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);*/
+            #endregion
 
             window.SwapBuffers();
         }
