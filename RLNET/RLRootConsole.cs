@@ -457,7 +457,7 @@ namespace RLNET
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
-            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A);
+            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
 
             #region Static Pipeline Projection Setting
             //Set Projection
@@ -554,26 +554,57 @@ namespace RLNET
 
             GL.BindVertexArray(VertexArrayObject);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            #region Triangle
+            #region Triangle 
+            // Sloppy test code.
             /*Vector2[] vertices = {
                 new Vector2(-0.5f, -0.5f), //Bottom-left vertex
                 new Vector2(0.5f, -0.5f), //Bottom-right vertex
                 new Vector2(0.0f,  0.5f) //Top vertex
             };
             GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);*/
-            Vector2[] bigTriangle = {
+            /*Vector2[] bigTriangle = {
                 new Vector2(20, 20), //Bottom-left vertex
                 new Vector2(40, 20), //Bottom-right vertex
                 new Vector2(30, 40) //Top vertex
             };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, bigTriangle, BufferUsageARB.StaticDraw);
-            #endregion
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, bigTriangle, BufferUsageARB.StaticDraw);*/
+            float[] texturedRectancle ={
+                128, 128, 1, 1,
+                128, 16, 1, 0,
+                16, 16, 0, 0,
+                16, 128, 0, 1
+            };
+            GL.BufferData(BufferTargetARB.ArrayBuffer, texturedRectancle, BufferUsageARB.StaticDraw);
 
+            uint[] texturedRectangleIndices =
+            {
+                0, 1, 3,
+                1, 2, 3
+            };
+            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
+            GL.BufferData(BufferTargetARB.ElementArrayBuffer, texturedRectangleIndices, BufferUsageARB.StaticDraw);
+
+            #endregion
+            // Array management 
+
+            int vertexShaderStride = 4 * sizeof(float); // 5 shouldn't be hardcoded...
+
+            // TODO: Get attribute location should be called once instead of every render frame.
+            uint vertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
+            GL.EnableVertexAttribArray(vertexCoordinateAttributeLocation);
+            GL.VertexAttribPointer(vertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
+
+            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTextCoord");
+            GL.EnableVertexAttribArray(textureCoordinateAttributeLocation);
+            GL.VertexAttribPointer(textureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
+
+            GL.BindVertexArray(VertexArrayObject);
+            GL.ActiveTexture(TextureUnit.Texture0);
+            GL.BindTexture(TextureTarget.Texture2d, texId);
             shader.Use();
-            GL.BindVertexArray(VertexArrayObject); // Redundant?
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            // Old: GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            // New?: GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
 
             window.SwapBuffers();
         }
@@ -671,6 +702,10 @@ namespace RLNET
             return vertices;
         }
 
+        /// <summary>
+        /// Loads a texture file with alpha = 0 for one pallete color and alpha = 1 for all others.
+        /// </summary>
+        /// <param name="filename"></param>
         private void LoadTexture2d(string filename)
         {
             if (texId != 0) GL.DeleteTexture(texId);

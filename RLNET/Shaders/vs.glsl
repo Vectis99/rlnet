@@ -1,7 +1,11 @@
 ﻿#version 330 core
- 
+
+// Position
 layout(location = 0) in vec2 aPosition;
-// color, texture...
+
+// Texture
+layout(location = 1) in vec2 aTexCoord;
+out vec2 texCoord;
 
 // Transformation: https://opentk.net/learn/chapter1/8-coordinate-systems.html
 uniform mat4 model;

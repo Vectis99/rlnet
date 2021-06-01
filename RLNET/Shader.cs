@@ -102,6 +102,16 @@ namespace RLNET
         }
 
         /// <summary>
+        /// Gets the location of a vertex attribute.
+        /// </summary>
+        /// <param name="attribName">The name of the vertex attribute to get.</param>
+        /// <returns>The index of the attribute</returns>
+        public uint GetAttribLocation(string attribName)
+        {
+            return (uint)GL.GetAttribLocation(Handle, attribName);
+        }
+
+        /// <summary>
         /// Set a uniform float on this shader.
         /// </summary>
         /// <param name="name">The name of the uniform</param>
