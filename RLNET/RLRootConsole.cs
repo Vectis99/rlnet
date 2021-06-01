@@ -587,7 +587,7 @@ namespace RLNET
             #endregion
             // Array management 
 
-            int vertexShaderStride = 4 * sizeof(float); // 5 shouldn't be hardcoded...
+            int vertexShaderStride = 4 * sizeof(float);
 
             // TODO: Get attribute location should be called once instead of every render frame.
             uint vertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
@@ -733,11 +733,11 @@ namespace RLNET
             int g = rgbValues[2];
             for (int i = 0; i < rgbValues.Length; i += 4)
             {
-                /*if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
-                    rgbValues[i + 3] = 0;*/
-                rgbValues[i] = (byte)((i + 25) % 255);
-                rgbValues[i + 1] = (byte)((i + 100) % 255);
-                rgbValues[i + 2] = (byte)((i + 10) % 255);
+                if (rgbValues[i] == r && rgbValues[i + 1] == b && rgbValues[i + 2] == g)
+                    rgbValues[i + 3] = 0;
+                // rgbValues[i] = (byte)((i + 25) % 255);
+                // rgbValues[i + 1] = (byte)((i + 100) % 255);
+                // rgbValues[i + 2] = (byte)((i + 10) % 255);
                 // rgbValues[i + 3] = 1;
             }
 
