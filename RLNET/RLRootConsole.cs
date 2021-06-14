@@ -50,11 +50,11 @@ namespace RLNET
         private uint vboId; //position bo
         private uint iboId; //index bo
         private uint tcboId; //tex coord bo
-        private uint foreColorId; //color3 bo
-        private uint backColorId; //color3 bo
-        private Vector2[] texVertices;
-        private Vector3[] colorVertices;
-        private Vector3[] backColorVertices;
+        private Vector2[] posVerticies; // 4 verticies per cell
+        private Vector2[] texVertices; // 4 verticies per cell
+        private Vector3[] colorVertices; // 4 vericies per cell
+        private Vector3[] backColorVertices; // 4 vericies per cell
+        private uint[] vertexIndices; // 6 indicies per cell
         private float uRatio;
         private float vRatio;
         private int charsPerRow;
@@ -265,8 +265,6 @@ namespace RLNET
             vboId = GL.GenBuffer(); // vertex buffer object vbo
             iboId = GL.GenBuffer(); // element buffer object ebo
             tcboId = GL.GenBuffer();
-            foreColorId = GL.GenBuffer();
-            backColorId = GL.GenBuffer();
             // 5. Generate a window (performs additional GL initalization!)
             CalcWindow(true);
             // 6. Specify the clear color
@@ -421,8 +419,6 @@ namespace RLNET
                 GL.DeleteBuffer(vboId);
                 GL.DeleteBuffer(iboId);
                 GL.DeleteBuffer(tcboId);
-                GL.DeleteBuffer(foreColorId);
-                GL.DeleteBuffer(backColorId);
                 GL.DeleteTexture(texId);
             }
         }
@@ -435,25 +431,20 @@ namespace RLNET
         private void CreateBuffers(int width, int height)
         {
             /*The following buffer-related functions had to be updated to the new method*/
-            Vector2[] vertices = CreateVertices(width, height, charWidth, charHeight);
+            posVerticies = CreateVertices(width, height, charWidth, charHeight); // Vector2[width * height * 4]
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);
+            GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, posVerticies, BufferUsageARB.StaticDraw);
 
             texVertices = new Vector2[width * height * 4];
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
             GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
 
             colorVertices = new Vector3[width * height * 4];
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, foreColorId);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
-
             backColorVertices = new Vector3[width * height * 4];
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
 
-            uint[] indices = CreateIndices(width * height);
+            vertexIndices = CreateIndices(width * height); // Vector2[width * height * 6]
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
-            GL.BufferData(BufferTargetARB.ElementArrayBuffer, indices, BufferUsageARB.StaticDraw);
+            GL.BufferData(BufferTargetARB.ElementArrayBuffer, vertexIndices, BufferUsageARB.StaticDraw);
 
             // Unbinding:
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
@@ -549,7 +540,7 @@ namespace RLNET
 
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            
+
 
             #region Static Pipeline Projection Setting
             //Set Projection
@@ -574,7 +565,7 @@ namespace RLNET
             //Setup States
             GL.Enable(EnableCap.VertexArray);
             GL.Enable(EnableCap.IndexArray);
-            GL.Enable(EnableCap.ColorArray);
+            // GL.Enable(EnableCap.ColorArray);
             GL.Enable(EnableCap.Blend);
             GL.Disable(EnableCap.Lighting);
             GL.Disable(EnableCap.DepthTest);
@@ -646,37 +637,39 @@ namespace RLNET
             GL.BindVertexArray(VertexArrayObject);
             // Verticies (vbo)
             // Alternative consideration for interleaved: https://stackoverflow.com/questions/7224511/interleaved-merge-with-linq
-            IEnumerable<float> graphialParameters = rectanglePositions.Concat(rectangleTextures).Concat(foregroundColors).Concat(backgroundColors);
+            // Dummy:
+            // IEnumerable<float> graphialParameters = rectanglePositions.Concat(rectangleTextures).Concat(foregroundColors).Concat(backgroundColors);
+            // Real:
+            IEnumerable<float> drawData = posVerticies.SelectMany(va => VectorDecomposition(va))
+                .Concat(texVertices.SelectMany(va => VectorDecomposition(va)))
+                .Concat(colorVertices.SelectMany(va => VectorDecomposition(va)))
+                .Concat(backColorVertices.SelectMany(va => VectorDecomposition(va)));
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, graphialParameters.ToArray(), BufferUsageARB.StaticDraw);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, drawData.ToArray(), BufferUsageARB.DynamicDraw);
 
             // Indicies (ebo)
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
-            GL.BufferData(BufferTargetARB.ElementArrayBuffer, texturedRectangleIndices, BufferUsageARB.StaticDraw);
+            GL.BufferData(BufferTargetARB.ElementArrayBuffer, vertexIndices, BufferUsageARB.DynamicDraw);
 
-            ConfigureGLArrays(graphialParameters.Count() / 12); // TODO make this not a magic number
-
-            GL.BindVertexArray(VertexArrayObject);
+            ConfigureVertexArray(drawData.Count() / 10); // TODO make this not a magic number
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2d, texId);
             shader.Use();
             // Old: GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
             // New?: GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
-            GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawElements(PrimitiveType.Triangles, vertexIndices.Length, DrawElementsType.UnsignedInt, 0);
 
             window.SwapBuffers();
         }
 
         /// <summary>
-        /// Configures the vertex array.
+        /// Configures the bound vertex array.
         /// This MUST be called AFTER The VBO and EBO are written to, every time.
         /// </summary>
         /// <param name="numVertices">The number of verticies in <see cref="VertexArrayObject"/>.</param>
-        private void ConfigureGLArrays(int numVertices)
+        private void ConfigureVertexArray(int numVertices)
         {
             int offset = 0;
-            GL.BindVertexArray(VertexArrayObject);
-            
             GL.EnableVertexAttribArray(VertexCoordinateAttributeLocation);
             GL.VertexAttribPointer(VertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), offset);
             offset += numVertices * 2 * sizeof(float);
@@ -686,13 +679,16 @@ namespace RLNET
             offset += numVertices * 2 * sizeof(float);
 
             GL.EnableVertexAttribArray(ForegroundColorAttributeLocation);
-            GL.VertexAttribPointer(ForegroundColorAttributeLocation, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), offset);
-            offset += numVertices * 4 * sizeof(float);
+            GL.VertexAttribPointer(ForegroundColorAttributeLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), offset);
+            offset += numVertices * 3 * sizeof(float);
 
             GL.EnableVertexAttribArray(BackgroundColorAttributeLocation);
-            GL.VertexAttribPointer(BackgroundColorAttributeLocation, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), offset);
+            GL.VertexAttribPointer(BackgroundColorAttributeLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), offset);
         }
 
+        /// <summary>
+        /// Generates color and texture verticies, per cell, ordered counterclockwise from NE, row-dominant.
+        /// </summary>
         private void CellsToVertices()
         {
             float charU = (float)charWidth * uRatio;
@@ -744,6 +740,8 @@ namespace RLNET
             {
                 uint iv = (uint)(i * 4);
                 uint ii = (uint)(i * 6);
+                //1 -- 0
+                //2 -- 3
                 indices[ii] = iv;
                 indices[ii + 1] = (uint)(iv + 1);
                 indices[ii + 2] = (uint)(iv + 2);
@@ -751,10 +749,17 @@ namespace RLNET
                 indices[ii + 4] = (uint)(iv + 3);
                 indices[ii + 5] = iv;
             }
-
             return indices;
         }
 
+        /// <summary>
+        /// Creates verticies for each corner of each cell.
+        /// </summary>
+        /// <param name="width">The number of cells on the horizontal axis.</param>
+        /// <param name="height">The number of cells on the vertical axis.</param>
+        /// <param name="charWidth">The width of a cell.</param>
+        /// <param name="charHeight">The height of a cell</param>
+        /// <returns>The generated verticies, 4 per cell, ordered counterclockwise from NE, row-dominant.</returns>
         private Vector2[] CreateVertices(int width, int height, int charWidth, int charHeight)
         {
             Vector2[] vertices = new Vector2[width * height * 4];
@@ -789,7 +794,7 @@ namespace RLNET
         /// <summary>
         /// Loads a texture file with alpha = 0 for one pallete color and alpha = 1 for all others.
         /// </summary>
-        /// <param name="filename"></param>
+        /// <param name="filename">The absolute or releative path to the file to open.</param>
         private void LoadTexture2d(string filename)
         {
             if (texId != 0) GL.DeleteTexture(texId);
@@ -834,5 +839,43 @@ namespace RLNET
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
             GL.TexParameteri(TextureTarget.Texture2d, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         }
+
+        #region Vector Decompositions
+        /// <summary>
+        /// Returns the components, in order, of <paramref name="v"/>.
+        /// </summary>
+        /// <param name="v">The vector to decompose.</param>
+        /// <returns><c>{ v.X, v.Y }</c></returns>
+        protected IEnumerable<float> VectorDecomposition(Vector2 v)
+        {
+            yield return v.X;
+            yield return v.Y;
+        }
+
+        /// <summary>
+        /// Returns the components, in order, of <paramref name="v"/>.
+        /// </summary>
+        /// <param name="v">The vector to decompose.</param>
+        /// <returns><c>{ v.X, v.Y, v.Z }</c></returns>
+        protected IEnumerable<float> VectorDecomposition(Vector3 v)
+        {
+            yield return v.X;
+            yield return v.Y;
+            yield return v.Z;
+        }
+
+        /// <summary>
+        /// Returns the components, in order, of <paramref name="v"/>.
+        /// </summary>
+        /// <param name="v">The vector to decompose.</param>
+        /// <returns><c>{ v.X, v.Y, v.Z, v.W }</c></returns>
+        protected IEnumerable<float> VectorDecomposition(Vector4 v)
+        {
+            yield return v.X;
+            yield return v.Y;
+            yield return v.Z;
+            yield return v.W;
+        }
+        #endregion
     }
 }
