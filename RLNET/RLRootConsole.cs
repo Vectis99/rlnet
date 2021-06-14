@@ -40,6 +40,7 @@ namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
+        // Is there a way to package these shaders more nicely"?
         private const string VertexPath = "Shaders/RLCellVertexShader.glsl";
         private const string FragmentPath = "Shaders/RLCellFragmentShader.glsl";
         private GameWindow window;

@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk" ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
+  <PropertyGroup> <!--Project information-->
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6EAB9AF3-893E-41AB-9E86-31DDDDC97B69}</ProjectGuid>
@@ -10,17 +10,18 @@
     <AssemblyName>RLNET</AssemblyName>
     <TargetFramework>net5.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
-    <Version>2.0.0</Version>
+    <Version>2.0.2-beta</Version>
     <Authors>Travis M. Clark, Eric Prather</Authors>
     <Description>RLNET is a lightweight API to help quickly create tile-based games for .NET. RLNET provides a console output, swappable colors, true color sprites, keyboard and mouse inputs. RLNET uses OpenTK</Description>
     <Copyright>Copyright 2014-2015 Travis M. Clark</Copyright>
-    <PackageLicenseExpression>https://bitbucket.org/clarktravism/rlnet/</PackageLicenseExpression>
+    <PackageLicenseExpression></PackageLicenseExpression>
     <PackageProjectUrl>https://bitbucket.org/clarktravism/rlnet/</PackageProjectUrl>
     <RepositoryUrl>https://bitbucket.org/clarktravism/rlnet/</RepositoryUrl>
     <PackageTags>roguelike console tile based game opentk</PackageTags>
     <PackageReleaseNotes>Updated to .NET 5</PackageReleaseNotes>
     <PackageId>RLNET5</PackageId>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,24 +40,26 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <ItemGroup>
+  <ItemGroup> <!--Licenses and nuget specification-->
+    <None Include="..\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="packages.config" />
     <None Include="packages.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="RLNET.nuspec" />
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup> <!--Packages-->
     <PackageReference Include="OpenTK" Version="5.0.0-pre.5" />
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.2.21154.6" />
   </ItemGroup>
-  <ItemGroup>
-    <None Update="Shaders\RLCellFragmentShader.glsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Shaders\RLCellVertexShader.glsl">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+  <ItemGroup> <!--Shaders-->
+    <Content Include="Shaders\*.*">
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory><!--For project references-->
+      <PackageCopyToOutput>true</PackageCopyToOutput><!--For nuget packages-->
+    </Content>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
