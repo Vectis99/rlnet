@@ -6,7 +6,7 @@
     <title>$title$</title>
     <authors>Travis M. Clark</authors>
     <owners>Travis M. Clark</owners>
-    <licenseUrl>https://bitbucket.org/clarktravism/rlnet/</licenseUrl>
+    <license>https://bitbucket.org/clarktravism/rlnet/</license>
     <projectUrl>https://bitbucket.org/clarktravism/rlnet/</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>
