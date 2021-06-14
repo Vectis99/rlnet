@@ -40,10 +40,10 @@
     <PackageReference Include="System.Drawing.Common" Version="6.0.0-preview.2.21154.6" />
   </ItemGroup>
   <ItemGroup>
-    <None Update="Shaders\fs.glsl">
+    <None Update="Shaders\RLCellFragmentShader.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Shaders\vs.glsl">
+    <None Update="Shaders\RLCellVertexShader.glsl">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

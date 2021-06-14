@@ -40,8 +40,8 @@ namespace RLNET
 {
     public class RLRootConsole : RLConsole
     {
-        private const string VertexPath = "Shaders/vs.glsl";
-        private const string FragmentPath = "Shaders/fs.glsl";
+        private const string VertexPath = "Shaders/RLCellVertexShader.glsl";
+        private const string FragmentPath = "Shaders/RLCellFragmentShader.glsl";
         private GameWindow window;
         private bool closed = false;
 
