@@ -10,6 +10,15 @@
     <AssemblyName>RLNET</AssemblyName>
     <TargetFramework>net5.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
+    <Version>2.0.0</Version>
+    <Authors>Travis M. Clark</Authors>
+    <Description>RLNET is a lightweight API to help quickly create tile-based games for .NET. RLNET provides a console output, swappable colors, true color sprites, keyboard and mouse inputs. RLNET uses OpenTK</Description>
+    <Copyright>Copyright 2014-2015 Travis M. Clark</Copyright>
+    <PackageLicenseExpression>https://bitbucket.org/clarktravism/rlnet/</PackageLicenseExpression>
+    <PackageProjectUrl>https://bitbucket.org/clarktravism/rlnet/</PackageProjectUrl>
+    <RepositoryUrl>https://bitbucket.org/clarktravism/rlnet/</RepositoryUrl>
+    <PackageTags>roguelike console tile based game opentk</PackageTags>
+    <PackageReleaseNotes>Updated to .NET 5</PackageReleaseNotes>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

@@ -15,7 +15,7 @@
     </description>
     <releaseNotes>
       New features:
- 	  * Initial Release
+ 	  * Update to .NET 5
     </releaseNotes>
     <copyright>Copyright 2014-2015 Travis M. Clark</copyright>
     <tags>roguelike console tile based game opentk</tags>
