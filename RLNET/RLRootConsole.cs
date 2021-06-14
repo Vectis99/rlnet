@@ -68,9 +68,43 @@ namespace RLNET
 
         #region New GL
         /// <summary> The shader to draw tiles with. </summary>
-        Shader shader;
+        protected Shader shader;
 
-        uint VertexArrayObject;
+        /// <summary>
+        /// Stores "rules" about how datasets in buffers should be interpreted.
+        /// </summary>
+        /// <remarks>
+        /// Hypothetically, this should only have to be calculated during the program's initalization, but 
+        /// there have been difficulties in reaching this architectural optimization.
+        /// </remarks>
+        protected uint VertexArrayObject;
+        /// <summary>
+        /// The location of the shader attribute in <see cref="Shader"/> that stores the
+        /// (X, Y) coordinates.
+        /// </summary>
+        /// <remarks>
+        /// Buffer.
+        /// </remarks>
+        protected uint VertexCoordinateAttributeLocation;
+        /// <summary>
+        /// The location of the shader attribute in <see cref="Shader"/> that stores the
+        /// (R, G, B, A) color.
+        /// </summary>
+        protected uint TextureCoordinateAttributeLocation;
+        #endregion
+
+        #region Dummy data
+        protected float[] texturedRectancle ={
+            128, 128, 1, 1,
+            128, 16, 1, 0,
+            16, 16, 0, 0,
+            16, 128, 0, 1
+        };
+        protected uint[] texturedRectangleIndices =
+        {
+            0, 1, 3,
+            1, 2, 3
+        };
         #endregion
 
         public event UpdateEventHandler Render;
@@ -182,19 +216,24 @@ namespace RLNET
         {
             // 1. Load the shader.
             shader = new Shader(VertexPath, FragmentPath);
+            // The following two assignments should be made obsolete by fields in the shader class or subclass.
+            VertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
+            TextureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord");
 
-            
             // 2. Instantiate the Vertex Array Object (VAO)
             VertexArrayObject = GL.GenVertexArray();
             // 3. Load the glyph texture file.
             LoadTexture2d(settings.BitmapFile);
-            vboId = GL.GenBuffer();
-            iboId = GL.GenBuffer();
+            // 4. Load the GL buffers
+            vboId = GL.GenBuffer(); // vertex buffer object vbo
+            iboId = GL.GenBuffer(); // element buffer object ebo
             tcboId = GL.GenBuffer();
             foreColorId = GL.GenBuffer();
             backColorId = GL.GenBuffer();
-            // 6. Generate a window (performs additional GL initalization!)
+            // 5. Generate a window (performs additional GL initalization!)
             CalcWindow(true);
+            // 6. Specify the clear color
+            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
         }
 
         void window_Load()
@@ -473,13 +512,12 @@ namespace RLNET
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
-            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
 
             #region Static Pipeline Projection Setting
             //Set Projection
             // The old static method (bad):
             /*
-            GL.MatrixMode(MatrixMode.Projection);
+            GL.If (MatrixMode.Projection);
             GL.LoadIdentity();
             GL.Ortho(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
             GL.MatrixMode(MatrixMode.Modelview);
@@ -503,7 +541,6 @@ namespace RLNET
             GL.Disable(EnableCap.Lighting);
             GL.Disable(EnableCap.DepthTest);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-            GL.BindTexture(TextureTarget.Texture2d, texId);
 
             #region Half-broken Static Pipeline
             /*
@@ -569,50 +606,15 @@ namespace RLNET
             #endregion
 
             GL.BindVertexArray(VertexArrayObject);
+            // Verticies (vbo)
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            #region Triangle 
-            // Sloppy test code.
-            /*Vector2[] vertices = {
-                new Vector2(-0.5f, -0.5f), //Bottom-left vertex
-                new Vector2(0.5f, -0.5f), //Bottom-right vertex
-                new Vector2(0.0f,  0.5f) //Top vertex
-            };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, vertices, BufferUsageARB.StaticDraw);*/
-            /*Vector2[] bigTriangle = {
-                new Vector2(20, 20), //Bottom-left vertex
-                new Vector2(40, 20), //Bottom-right vertex
-                new Vector2(30, 40) //Top vertex
-            };
-            GL.BufferData(BufferTargetARB.ArrayBuffer, bigTriangle, BufferUsageARB.StaticDraw);*/
-            float[] texturedRectancle ={
-                128, 128, 1, 1,
-                128, 16, 1, 0,
-                16, 16, 0, 0,
-                16, 128, 0, 1
-            };
             GL.BufferData(BufferTargetARB.ArrayBuffer, texturedRectancle, BufferUsageARB.StaticDraw);
 
-            uint[] texturedRectangleIndices =
-            {
-                0, 1, 3,
-                1, 2, 3
-            };
+            // Indicies (ebo)
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, texturedRectangleIndices, BufferUsageARB.StaticDraw);
 
-            #endregion
-            // Array management 
-
-            int vertexShaderStride = 4 * sizeof(float);
-
-            // TODO: Get attribute location should be called once instead of every render frame.
-            uint vertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
-            GL.EnableVertexAttribArray(vertexCoordinateAttributeLocation);
-            GL.VertexAttribPointer(vertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
-
-            uint textureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord");
-            GL.EnableVertexAttribArray(textureCoordinateAttributeLocation);
-            GL.VertexAttribPointer(textureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
+            ConfigureVertexArray();
 
             GL.BindVertexArray(VertexArrayObject);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -623,6 +625,23 @@ namespace RLNET
             GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
 
             window.SwapBuffers();
+        }
+
+        /// <summary>
+        /// Configures the vertex array.
+        /// This MUST be called AFTER The VBO and EBO are written to, every time.
+        /// </summary>
+        private void ConfigureVertexArray()
+        {
+            int vertexShaderStride = 4 * sizeof(float);
+
+            GL.BindVertexArray(VertexArrayObject);
+            
+            GL.EnableVertexAttribArray(VertexCoordinateAttributeLocation);
+            GL.VertexAttribPointer(VertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
+
+            GL.EnableVertexAttribArray(TextureCoordinateAttributeLocation);
+            GL.VertexAttribPointer(TextureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
         }
 
         private void CellsToVertices()
