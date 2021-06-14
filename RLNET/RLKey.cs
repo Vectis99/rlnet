@@ -29,597 +29,602 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OpenTK.Input;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace RLNET
 {
+    /// <summary>
+    /// Wrapper for <see cref="OpenTK.Windowing.GraphicsLibraryFramework"/>
+    /// maintained for compatability.
+    /// </summary>
     public enum RLKey 
     {
         // Summary:
         //     A key outside the known keys.
-        Unknown = 0,
+        Unknown = Keys.Unknown,
         //
         // Summary:
         //     The left shift key (equivalent to ShiftLeft).
-        LShift = 1,
+        LShift = Keys.LeftShift,
         //
         // Summary:
         //     The left shift key.
-        ShiftLeft = 1,
+        ShiftLeft = Keys.LeftShift,
         //
         // Summary:
         //     The right shift key (equivalent to ShiftRight).
-        RShift = 2,
+        RShift = Keys.RightShift,
         //
         // Summary:
         //     The right shift key.
-        ShiftRight = 2,
+        ShiftRight = Keys.RightShift,
         //
         // Summary:
         //     The left control key (equivalent to ControlLeft).
-        LControl = 3,
+        LControl = Keys.LeftControl,
         //
         // Summary:
         //     The left control key.
-        ControlLeft = 3,
+        ControlLeft = Keys.LeftControl,
         //
         // Summary:
         //     The right control key (equivalent to ControlRight).
-        RControl = 4,
+        RControl = Keys.RightControl,
         //
         // Summary:
         //     The right control key.
-        ControlRight = 4,
+        ControlRight = Keys.RightControl,
         //
         // Summary:
         //     The left alt key.
-        AltLeft = 5,
+        AltLeft = Keys.LeftAlt,
         //
         // Summary:
         //     The left alt key (equivalent to AltLeft.
-        LAlt = 5,
+        LAlt = Keys.LeftAlt,
         //
         // Summary:
         //     The right alt key.
-        AltRight = 6,
+        AltRight = Keys.RightAlt,
         //
         // Summary:
         //     The right alt key (equivalent to AltRight).
-        RAlt = 6,
+        RAlt = Keys.RightAlt,
         //
         // Summary:
         //     The left win key.
-        WinLeft = 7,
+        WinLeft = Keys.LeftSuper,
         //
         // Summary:
         //     The left win key (equivalent to WinLeft).
-        LWin = 7,
+        LWin = Keys.LeftSuper,
         //
         // Summary:
         //     The right win key (equivalent to WinRight).
-        RWin = 8,
+        RWin = Keys.RightSuper,
         //
         // Summary:
         //     The right win key.
-        WinRight = 8,
+        WinRight = Keys.RightSuper,
         //
         // Summary:
         //     The menu key.
-        Menu = 9,
+        Menu = Keys.Menu,
         //
         // Summary:
         //     The F1 key.
-        F1 = 10,
+        F1 = Keys.F1,
         //
         // Summary:
         //     The F2 key.
-        F2 = 11,
+        F2 = Keys.F2,
         //
         // Summary:
         //     The F3 key.
-        F3 = 12,
+        F3 = Keys.F3,
         //
         // Summary:
         //     The F4 key.
-        F4 = 13,
+        F4 = Keys.F4,
         //
         // Summary:
         //     The F5 key.
-        F5 = 14,
+        F5 = Keys.F5,
         //
         // Summary:
         //     The F6 key.
-        F6 = 15,
+        F6 = Keys.F6,
         //
         // Summary:
         //     The F7 key.
-        F7 = 16,
+        F7 = Keys.F7,
         //
         // Summary:
         //     The F8 key.
-        F8 = 17,
+        F8 = Keys.F8,
         //
         // Summary:
         //     The F9 key.
-        F9 = 18,
+        F9 = Keys.F9,
         //
         // Summary:
         //     The F10 key.
-        F10 = 19,
+        F10 = Keys.F10,
         //
         // Summary:
         //     The F11 key.
-        F11 = 20,
+        F11 = Keys.F11,
         //
         // Summary:
         //     The F12 key.
-        F12 = 21,
+        F12 = Keys.F12,
         //
         // Summary:
         //     The F13 key.
-        F13 = 22,
+        F13 = Keys.F13,
         //
         // Summary:
         //     The F14 key.
-        F14 = 23,
+        F14 = Keys.F14,
         //
         // Summary:
         //     The F15 key.
-        F15 = 24,
+        F15 = Keys.F15,
         //
         // Summary:
         //     The F16 key.
-        F16 = 25,
+        F16 = Keys.F16,
         //
         // Summary:
         //     The F17 key.
-        F17 = 26,
+        F17 = Keys.F17,
         //
         // Summary:
         //     The F18 key.
-        F18 = 27,
+        F18 = Keys.F18,
         //
         // Summary:
         //     The F19 key.
-        F19 = 28,
+        F19 = Keys.F19,
         //
         // Summary:
         //     The F20 key.
-        F20 = 29,
+        F20 = Keys.F20,
         //
         // Summary:
         //     The F21 key.
-        F21 = 30,
+        F21 = Keys.F21,
         //
         // Summary:
         //     The F22 key.
-        F22 = 31,
+        F22 = Keys.F22,
         //
         // Summary:
         //     The F23 key.
-        F23 = 32,
+        F23 = Keys.F23,
         //
         // Summary:
         //     The F24 key.
-        F24 = 33,
+        F24 = Keys.F24,
         //
         // Summary:
         //     The F25 key.
-        F25 = 34,
+        F25 = Keys.F25,
         //
         // Summary:
         //     The F26 key.
-        F26 = 35,
+        F26,
         //
         // Summary:
         //     The F27 key.
-        F27 = 36,
+        F27,
         //
         // Summary:
         //     The F28 key.
-        F28 = 37,
+        F28,
         //
         // Summary:
         //     The F29 key.
-        F29 = 38,
+        F29,
         //
         // Summary:
         //     The F30 key.
-        F30 = 39,
+        F30,
         //
         // Summary:
         //     The F31 key.
-        F31 = 40,
+        F31,
         //
         // Summary:
         //     The F32 key.
-        F32 = 41,
+        F32,
         //
         // Summary:
         //     The F33 key.
-        F33 = 42,
+        F33,
         //
         // Summary:
         //     The F34 key.
-        F34 = 43,
+        F34,
         //
         // Summary:
         //     The F35 key.
-        F35 = 44,
+        F35,
         //
         // Summary:
         //     The up arrow key.
-        Up = 45,
+        Up = Keys.Up,
         //
         // Summary:
         //     The down arrow key.
-        Down = 46,
+        Down = Keys.Down,
         //
         // Summary:
         //     The left arrow key.
-        Left = 47,
+        Left = Keys.Left,
         //
         // Summary:
         //     The right arrow key.
-        Right = 48,
+        Right = Keys.Right,
         //
         // Summary:
         //     The enter key.
-        Enter = 49,
+        Enter = Keys.Enter,
         //
         // Summary:
         //     The escape key.
-        Escape = 50,
+        Escape = Keys.Escape,
         //
         // Summary:
         //     The space key.
-        Space = 51,
+        Space = Keys.Space,
         //
         // Summary:
         //     The tab key.
-        Tab = 52,
+        Tab = Keys.Tab,
         //
         // Summary:
         //     The backspace key (equivalent to BackSpace).
-        Back = 53,
+        Back = Keys.Backspace,
         //
         // Summary:
         //     The backspace key.
-        BackSpace = 53,
+        BackSpace = Keys.Backspace,
         //
         // Summary:
         //     The insert key.
-        Insert = 54,
+        Insert = Keys.Insert,
         //
         // Summary:
         //     The delete key.
-        Delete = 55,
+        Delete = Keys.Delete,
         //
         // Summary:
         //     The page up key.
-        PageUp = 56,
+        PageUp = Keys.PageUp,
         //
         // Summary:
         //     The page down key.
-        PageDown = 57,
+        PageDown = Keys.PageDown,
         //
         // Summary:
         //     The home key.
-        Home = 58,
+        Home = Keys.Home,
         //
         // Summary:
         //     The end key.
-        End = 59,
+        End = Keys.End,
         //
         // Summary:
         //     The caps lock key.
-        CapsLock = 60,
+        CapsLock = Keys.CapsLock,
         //
         // Summary:
         //     The scroll lock key.
-        ScrollLock = 61,
+        ScrollLock = Keys.ScrollLock,
         //
         // Summary:
         //     The print screen key.
-        PrintScreen = 62,
+        PrintScreen = Keys.PrintScreen,
         //
         // Summary:
         //     The pause key.
-        Pause = 63,
+        Pause = Keys.Pause,
         //
         // Summary:
         //     The num lock key.
-        NumLock = 64,
+        NumLock = Keys.NumLock,
         //
         // Summary:
         //     The clear key (Keypad5 with NumLock disabled, on typical keyboards).
-        Clear = 65,
+        Clear = Keys.KeyPad5,
         //
         // Summary:
         //     The sleep key.
-        Sleep = 66,
+        Sleep, // ???
         //
         // Summary:
         //     The keypad 0 key.
-        Keypad0 = 67,
+        Keypad0 = Keys.KeyPad0,
         //
         // Summary:
         //     The keypad 1 key.
-        Keypad1 = 68,
+        Keypad1 = Keys.KeyPad1,
         //
         // Summary:
         //     The keypad 2 key.
-        Keypad2 = 69,
+        Keypad2 = Keys.KeyPad2,
         //
         // Summary:
         //     The keypad 3 key.
-        Keypad3 = 70,
+        Keypad3 = Keys.KeyPad3,
         //
         // Summary:
         //     The keypad 4 key.
-        Keypad4 = 71,
+        Keypad4 = Keys.KeyPad4,
         //
         // Summary:
         //     The keypad 5 key.
-        Keypad5 = 72,
+        Keypad5 = Keys.KeyPad5,
         //
         // Summary:
         //     The keypad 6 key.
-        Keypad6 = 73,
+        Keypad6 = Keys.KeyPad6,
         //
         // Summary:
         //     The keypad 7 key.
-        Keypad7 = 74,
+        Keypad7 = Keys.KeyPad7,
         //
         // Summary:
         //     The keypad 8 key.
-        Keypad8 = 75,
+        Keypad8 = Keys.KeyPad8,
         //
         // Summary:
         //     The keypad 9 key.
-        Keypad9 = 76,
+        Keypad9 = Keys.KeyPad9,
         //
         // Summary:
         //     The keypad divide key.
-        KeypadDivide = 77,
+        KeypadDivide = Keys.KeyPadDivide,
         //
         // Summary:
         //     The keypad multiply key.
-        KeypadMultiply = 78,
+        KeypadMultiply = Keys.KeyPadMultiply,
         //
         // Summary:
         //     The keypad subtract key.
-        KeypadSubtract = 79,
+        KeypadSubtract = Keys.KeyPadSubtract,
         //
         // Summary:
         //     The keypad minus key (equivalent to KeypadSubtract).
-        KeypadMinus = 79,
+        KeypadMinus = Keys.KeyPadSubtract,
         //
         // Summary:
         //     The keypad plus key (equivalent to KeypadAdd).
-        KeypadPlus = 80,
+        KeypadPlus = Keys.KeyPadAdd,
         //
         // Summary:
         //     The keypad add key.
-        KeypadAdd = 80,
+        KeypadAdd = Keys.KeyPadAdd,
         //
         // Summary:
         //     The keypad decimal key.
-        KeypadDecimal = 81,
+        KeypadDecimal = Keys.KeyPadDecimal,
         //
         // Summary:
         //     The keypad period key (equivalent to KeypadDecimal).
-        KeypadPeriod = 81,
+        KeypadPeriod = Keys.KeyPadDecimal,
         //
         // Summary:
         //     The keypad enter key.
-        KeypadEnter = 82,
+        KeypadEnter = Keys.KeyPadEnter,
         //
         // Summary:
         //     The A key.
-        A = 83,
+        A = Keys.A,
         //
         // Summary:
         //     The B key.
-        B = 84,
+        B = Keys.B,
         //
         // Summary:
         //     The C key.
-        C = 85,
+        C = Keys.C,
         //
         // Summary:
         //     The D key.
-        D = 86,
+        D = Keys.D,
         //
         // Summary:
         //     The E key.
-        E = 87,
+        E = Keys.E,
         //
         // Summary:
         //     The F key.
-        F = 88,
+        F = Keys.F,
         //
         // Summary:
         //     The G key.
-        G = 89,
+        G = Keys.G,
         //
         // Summary:
         //     The H key.
-        H = 90,
+        H = Keys.H,
         //
         // Summary:
         //     The I key.
-        I = 91,
+        I = Keys.I,
         //
         // Summary:
         //     The J key.
-        J = 92,
+        J = Keys.J,
         //
         // Summary:
         //     The K key.
-        K = 93,
+        K = Keys.K,
         //
         // Summary:
         //     The L key.
-        L = 94,
+        L = Keys.L,
         //
         // Summary:
         //     The M key.
-        M = 95,
+        M = Keys.M,
         //
         // Summary:
         //     The N key.
-        N = 96,
+        N = Keys.N,
         //
         // Summary:
         //     The O key.
-        O = 97,
+        O = Keys.O,
         //
         // Summary:
         //     The P key.
-        P = 98,
+        P = Keys.P,
         //
         // Summary:
         //     The Q key.
-        Q = 99,
+        Q = Keys.Q,
         //
         // Summary:
         //     The R key.
-        R = 100,
+        R = Keys.R,
         //
         // Summary:
         //     The S key.
-        S = 101,
+        S = Keys.S,
         //
         // Summary:
         //     The T key.
-        T = 102,
+        T = Keys.T,
         //
         // Summary:
         //     The U key.
-        U = 103,
+        U = Keys.U,
         //
         // Summary:
         //     The V key.
-        V = 104,
+        V = Keys.V,
         //
         // Summary:
         //     The W key.
-        W = 105,
+        W = Keys.W,
         //
         // Summary:
         //     The X key.
-        X = 106,
+        X = Keys.X,
         //
         // Summary:
         //     The Y key.
-        Y = 107,
+        Y = Keys.Y,
         //
         // Summary:
         //     The Z key.
-        Z = 108,
+        Z = Keys.Z,
         //
         // Summary:
         //     The number 0 key.
-        Number0 = 109,
+        Number0 = Keys.D0,
         //
         // Summary:
         //     The number 1 key.
-        Number1 = 110,
+        Number1 = Keys.D1,
         //
         // Summary:
         //     The number 2 key.
-        Number2 = 111,
+        Number2 = Keys.D2,
         //
         // Summary:
         //     The number 3 key.
-        Number3 = 112,
+        Number3 = Keys.D3,
         //
         // Summary:
         //     The number 4 key.
-        Number4 = 113,
+        Number4 = Keys.D4,
         //
         // Summary:
         //     The number 5 key.
-        Number5 = 114,
+        Number5 = Keys.D5,
         //
         // Summary:
         //     The number 6 key.
-        Number6 = 115,
+        Number6 = Keys.D6,
         //
         // Summary:
         //     The number 7 key.
-        Number7 = 116,
+        Number7 = Keys.D7,
         //
         // Summary:
         //     The number 8 key.
-        Number8 = 117,
+        Number8 = Keys.D8,
         //
         // Summary:
         //     The number 9 key.
-        Number9 = 118,
+        Number9 = Keys.D9,
         //
         // Summary:
         //     The grave key (equivaent to Tilde).
-        Grave = 119,
+        Grave = Keys.GraveAccent,
         //
         // Summary:
         //     The tilde key.
-        Tilde = 119,
+        Tilde = Keys.GraveAccent,
         //
         // Summary:
         //     The minus key.
-        Minus = 120,
+        Minus = Keys.Minus,
         //
         // Summary:
         //     The plus key.
-        Plus = 121,
+        Plus = Keys.Equal,
         //
         // Summary:
         //     The left bracket key (equivalent to BracketLeft).
-        LBracket = 122,
+        LBracket = Keys.LeftBracket,
         //
         // Summary:
         //     The left bracket key.
-        BracketLeft = 122,
+        BracketLeft = Keys.LeftBracket,
         //
         // Summary:
         //     The right bracket key (equivalent to BracketRight).
-        RBracket = 123,
+        RBracket = Keys.RightBracket,
         //
         // Summary:
         //     The right bracket key.
-        BracketRight = 123,
+        BracketRight = Keys.RightBracket,
         //
         // Summary:
         //     The semicolon key.
-        Semicolon = 124,
+        Semicolon = Keys.Semicolon,
         //
         // Summary:
         //     The quote key.
-        Quote = 125,
+        Quote = Keys.Apostrophe,
         //
         // Summary:
         //     The comma key.
-        Comma = 126,
+        Comma = Keys.Comma,
         //
         // Summary:
         //     The period key.
-        Period = 127,
+        Period = Keys.Period,
         //
         // Summary:
         //     The slash key.
-        Slash = 128,
+        Slash = Keys.Slash,
         //
         // Summary:
         //     The backslash key.
-        BackSlash = 129,
+        BackSlash = Keys.Backslash,
         //
         // Summary:
         //     The secondary backslash key.
-        NonUSBackSlash = 130,
+        NonUSBackSlash,
         //
         // Summary:
         //     Indicates the last available keyboard key.
-        LastKey = 131
+        LastKey = Keys.LastKey
     }
 }
