@@ -7,14 +7,14 @@ layout(location = 0) in vec2 aPosition;
 layout(location = 1) in vec2 aTexCoord;
 
 // Foreground color
-layout(location = 2) in vec4 aForegroundColor;
+layout(location = 2) in vec3 aForegroundColor;
 
 // Background color
-layout(location = 3) in vec4 aBackgroundColor;
+layout(location = 3) in vec3 aBackgroundColor;
 
 out vec2 texCoord;
-out vec4 foregroundColor;
-out vec4 backgroundColor;
+out vec3 foregroundColor;
+out vec3 backgroundColor;
 
 // Transformation: https://opentk.net/learn/chapter1/8-coordinate-systems.html
 uniform mat4 model;
