@@ -45,7 +45,6 @@ namespace RLNET
         private GameWindow window;
         private bool closed = false;
 
-        #region Original GL
         private uint texId;
         private uint vboId; //position bo
         private uint iboId; //index bo
@@ -66,9 +65,7 @@ namespace RLNET
         private RLResizeType resizeType;
         private int offsetX;
         private int offsetY;
-        #endregion
 
-        #region New GL
         /// <summary> The shader to draw tiles with. </summary>
         protected Shader shader;
 
@@ -102,46 +99,7 @@ namespace RLNET
         /// The location of the <see cref="Shader"/> attribute that stores the background color.
         /// </summary>
         protected uint BackgroundColorAttributeLocation;
-        #endregion
-
-        #region Dummy data
-        protected float[] rectanglePositions ={
-            128, 128,
-            128, 16,
-            16, 16,
-            16, 128,
-        };
-
-        protected float[] rectangleTextures ={
-            1, 1,
-            1, 0,
-            0, 0,
-            0, 1
-        };
-
-        protected uint[] texturedRectangleIndices =
-        {
-            0, 1, 3,
-            1, 2, 3
-        };
-
-        protected float[] foregroundColors =
-        {
-            0f, 1f, 0f, 1f,
-            0f, 1f, 0f, 1f,
-            0f, 1f, 0f, 1f,
-            0f, 1f, 0f, 1f
-        };
-
-        protected float[] backgroundColors =
-        {
-            0f, 0f, 0.2f, 1f,
-            0f, 0f, 0.2f, 1f,
-            0f, 0f, 0.2f, 1f,
-            0f, 0f, 0.2f, 1f
-        };
-        #endregion
-
+        
         public event UpdateEventHandler Render;
         public event UpdateEventHandler Update;
         public event EventHandler OnLoad;
@@ -249,14 +207,14 @@ namespace RLNET
         /// <param name="settings"></param>
         private void InitGL(RLSettings settings)
         {
-            // 1. Load the shader.
+            // 1. Load the shader
             shader = new Shader(VertexPath, FragmentPath);
-            // The following two assignments should be made obsolete by fields in the shader class or subclass.
+            // The following assignments should be made obsolete by fields in the shader class or subclass,
+            // but are included here for simplicity.
             VertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
             TextureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord");
             ForegroundColorAttributeLocation = shader.GetAttribLocation("aForegroundColor");
             BackgroundColorAttributeLocation = shader.GetAttribLocation("aBackgroundColor");
-
             // 2. Instantiate the Vertex Array Object (VAO)
             VertexArrayObject = GL.GenVertexArray();
             // 3. Load the glyph texture file.
@@ -268,8 +226,8 @@ namespace RLNET
             // 5. Generate a window (performs additional GL initalization!)
             CalcWindow(true);
             // 6. Specify the clear color
-            GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
             // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
+            GL.ClearColor(Color.Black.R, Color.Black.G, Color.Black.B, Color.Black.A);
         }
 
         void window_Load()
@@ -413,14 +371,10 @@ namespace RLNET
             if (window != null)
                 window.Dispose();
 
-            if (!closed)
-            {
-                // TODO: Might not be the right way to delete buffers according to: https://opentk.net/learn/chapter1/2-hello-triangle.html
-                GL.DeleteBuffer(vboId);
-                GL.DeleteBuffer(iboId);
-                GL.DeleteBuffer(tcboId);
-                GL.DeleteTexture(texId);
-            }
+            GL.DeleteBuffer(vboId);
+            GL.DeleteBuffer(iboId);
+            GL.DeleteBuffer(tcboId);
+            GL.DeleteTexture(texId);
         }
 
         /// <summary>
@@ -430,7 +384,6 @@ namespace RLNET
         /// <param name="height">The height of the canvas.</param>
         private void CreateBuffers(int width, int height)
         {
-            /*The following buffer-related functions had to be updated to the new method*/
             posVerticies = CreateVertices(width, height, charWidth, charHeight); // Vector2[width * height * 4]
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
             GL.BufferData<Vector2>(BufferTargetARB.ArrayBuffer, posVerticies, BufferUsageARB.StaticDraw);
@@ -492,7 +445,7 @@ namespace RLNET
         /// <summary>
         /// Returns whether the window has been closed.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Whether the window has been closed.</returns>
         public bool IsWindowClosed()
         {
             return closed;
@@ -514,15 +467,6 @@ namespace RLNET
         private void window_Closed()
         {
             closed = true;
-
-            // TODO: Might not be the right way to delete buffers according to: https://opentk.net/learn/chapter1/2-hello-triangle.html
-            // Either that, or I'm redundant here with elsewhere, which seems more likely.
-            /* GL.DeleteBuffer(vboId);
-            GL.DeleteBuffer(iboId);
-            GL.DeleteBuffer(tcboId);
-            GL.DeleteBuffer(foreColorId);
-            GL.DeleteBuffer(backColorId);
-            GL.DeleteTexture(texId);*/
         }
 
         /// <summary>
@@ -541,105 +485,23 @@ namespace RLNET
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-
-            #region Static Pipeline Projection Setting
-            //Set Projection
-            // The old static method (bad):
-            /*
-            GL.If (MatrixMode.Projection);
-            GL.LoadIdentity();
-            GL.Ortho(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
-            GL.MatrixMode(MatrixMode.Modelview);
-            GL.LoadIdentity();
-            */
-            // ^ However, I would like to verify that I have an appropriate substitute for the above. Seems I don't...
-            #endregion
-
             // Orthographic Projection:
             Matrix4 model = Matrix4.CreateOrthographicOffCenter(0, Width * charWidth * scale, Height * charHeight * scale, 0, -1, 1);
             shader.SetMatrix4("model", model);
             shader.SetMatrix4("view", Matrix4.Identity);
             shader.SetMatrix4("projection", Matrix4.Identity);
 
-
             //Setup States
             GL.Enable(EnableCap.VertexArray);
             GL.Enable(EnableCap.IndexArray);
-            // GL.Enable(EnableCap.ColorArray);
             GL.Enable(EnableCap.Blend);
             GL.Disable(EnableCap.Lighting);
             GL.Disable(EnableCap.DepthTest);
             GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-            #region Half-broken Static Pipeline
-            /*
-            // The following four lines aren't a part of the latest OpenGL.
-            //GL.EnableClientState(ArrayCap.VertexArray);
-            //GL.EnableClientState(ArrayCap.IndexArray);
-            //GL.EnableClientState(ArrayCap.ColorArray);
-            //GL.Scale(scale3);
-
-            // In the following section, I believe the reason we don't often have to call GL.BufferData
-            // is because this is handled in the method CellsToVertices();
-
-            // GL.BufferData() is called in CreateBuffers(). This might not be right.
-            //VBO (Vertex Buffer Object)
-            //Vertex Buffer
-            GL.BindVertexArray(VertexArrayObject);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            // Originally: GL.VertexPointer(2, VertexPointerType.Float, 2 * sizeof(float), 0);
-            // uint index refers to vs.glsl's contents (layout(location = 0)).
-            // To be determined: Attributes "size" and "stride".
-            GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), 0); // TODO: Should this be 2 * sizeof(float) or 3 * sizeof(float)?
-            GL.EnableVertexAttribArray(0);
-            shader.Use();
-            
-            //Index Buffer
-            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
-
-            //Back Color Draw
-            //Color Buffer
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, backColorId);
-            // TODO: Can't find a replacement for GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, backColorVertices, BufferUsageARB.DynamicDraw);
-            //Draw Back Color
-            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0); // why *6?
-
-            //Fore Color / Texture Draw
-            //Texture Coord Buffer
-            GL.Enable(EnableCap.Texture2d);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, tcboId);
-            // TODO: Can't find a replacement for: GL.TexCoordPointer(2, TexCoordPointerType.Float, 2 * sizeof(float), 0);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, texVertices, BufferUsageARB.DynamicDraw);
-            //Color Buffer
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, foreColorId);
-            // TODO: Can't find a replacement for: GL.ColorPointer(3, ColorPointerType.Float, 3 * sizeof(float), 0);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, colorVertices, BufferUsageARB.DynamicDraw);
-            //Draw
-            GL.DrawElements(PrimitiveType.Triangles, Width * Height * 6, DrawElementsType.UnsignedInt, 0);
-
-            // Draw???
-            // The following doesn't seem to do anything:
-            // GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-
-            //Clean Up
-            GL.Disable(EnableCap.Texture2d);
-            // This is obsolete in this OpenGL version, however it may be safe to remove because
-            // it is tied to something else commented out:
-            // GL.DisableClientState(ArrayCap.VertexArray);
-            // GL.DisableClientState(ArrayCap.TextureCoordArray);
-            // GL.DisableClientState(ArrayCap.IndexArray);
-            // GL.DisableClientState(ArrayCap.ColorArray);
-            GL.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
-            GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, 0);*/
-            #endregion
-
             GL.BindVertexArray(VertexArrayObject);
             // Verticies (vbo)
             // Alternative consideration for interleaved: https://stackoverflow.com/questions/7224511/interleaved-merge-with-linq
-            // Dummy:
-            // IEnumerable<float> graphialParameters = rectanglePositions.Concat(rectangleTextures).Concat(foregroundColors).Concat(backgroundColors);
-            // Real:
             IEnumerable<float> drawData = posVerticies.SelectMany(va => VectorDecomposition(va))
                 .Concat(texVertices.SelectMany(va => VectorDecomposition(va)))
                 .Concat(colorVertices.SelectMany(va => VectorDecomposition(va)))
@@ -651,12 +513,10 @@ namespace RLNET
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, vertexIndices, BufferUsageARB.DynamicDraw);
 
-            ConfigureVertexArray(drawData.Count() / 10); // TODO make this not a magic number
+            ConfigureVertexArray(drawData.Count() / 10); // Depends on shader.
             GL.ActiveTexture(TextureUnit.Texture0);
             GL.BindTexture(TextureTarget.Texture2d, texId);
             shader.Use();
-            // Old: GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-            // New?: GL.DrawElements(PrimitiveType.Triangles, texturedRectangleIndices.Length, DrawElementsType.UnsignedInt, 0);
             GL.DrawElements(PrimitiveType.Triangles, vertexIndices.Length, DrawElementsType.UnsignedInt, 0);
 
             window.SwapBuffers();
@@ -667,6 +527,10 @@ namespace RLNET
         /// This MUST be called AFTER The VBO and EBO are written to, every time.
         /// </summary>
         /// <param name="numVertices">The number of verticies in <see cref="VertexArrayObject"/>.</param>
+        /// <remarks>
+        /// The best way to implement this function depends on the shader, so this should me made to be a part
+        /// of a relevant class.
+        /// </remarks>
         private void ConfigureVertexArray(int numVertices)
         {
             int offset = 0;
