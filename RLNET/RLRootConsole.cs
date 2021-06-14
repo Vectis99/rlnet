@@ -33,6 +33,8 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace RLNET
 {
@@ -78,32 +80,65 @@ namespace RLNET
         /// there have been difficulties in reaching this architectural optimization.
         /// </remarks>
         protected uint VertexArrayObject;
+
         /// <summary>
         /// The location of the shader attribute in <see cref="Shader"/> that stores the
         /// (X, Y) coordinates.
         /// </summary>
-        /// <remarks>
-        /// Buffer.
-        /// </remarks>
         protected uint VertexCoordinateAttributeLocation;
+
         /// <summary>
         /// The location of the shader attribute in <see cref="Shader"/> that stores the
-        /// (R, G, B, A) color.
+        /// texture.
         /// </summary>
         protected uint TextureCoordinateAttributeLocation;
+
+        /// <summary>
+        /// The location of the <see cref="Shader"/> attribute that stores the foreground color.
+        /// </summary>
+        protected uint ForegroundColorAttributeLocation;
+
+        /// <summary>
+        /// The location of the <see cref="Shader"/> attribute that stores the background color.
+        /// </summary>
+        protected uint BackgroundColorAttributeLocation;
         #endregion
 
         #region Dummy data
-        protected float[] texturedRectancle ={
-            128, 128, 1, 1,
-            128, 16, 1, 0,
-            16, 16, 0, 0,
-            16, 128, 0, 1
+        protected float[] rectanglePositions ={
+            128, 128,
+            128, 16,
+            16, 16,
+            16, 128,
         };
+
+        protected float[] rectangleTextures ={
+            1, 1,
+            1, 0,
+            0, 0,
+            0, 1
+        };
+
         protected uint[] texturedRectangleIndices =
         {
             0, 1, 3,
             1, 2, 3
+        };
+
+        protected float[] foregroundColors =
+        {
+            0f, 1f, 0f, 1f,
+            0f, 1f, 0f, 1f,
+            0f, 1f, 0f, 1f,
+            0f, 1f, 0f, 1f
+        };
+
+        protected float[] backgroundColors =
+        {
+            0f, 0f, 0.2f, 1f,
+            0f, 0f, 0.2f, 1f,
+            0f, 0f, 0.2f, 1f,
+            0f, 0f, 0.2f, 1f
         };
         #endregion
 
@@ -219,6 +254,8 @@ namespace RLNET
             // The following two assignments should be made obsolete by fields in the shader class or subclass.
             VertexCoordinateAttributeLocation = shader.GetAttribLocation("aPosition");
             TextureCoordinateAttributeLocation = shader.GetAttribLocation("aTexCoord");
+            ForegroundColorAttributeLocation = shader.GetAttribLocation("aForegroundColor");
+            BackgroundColorAttributeLocation = shader.GetAttribLocation("aBackgroundColor");
 
             // 2. Instantiate the Vertex Array Object (VAO)
             VertexArrayObject = GL.GenVertexArray();
@@ -234,6 +271,7 @@ namespace RLNET
             CalcWindow(true);
             // 6. Specify the clear color
             GL.ClearColor(Color.Red.R, Color.Red.G, Color.Red.B, Color.Black.A); // This only needs to be called once; it sets the values referred to by "GL.Clear" for every subsequent call.
+            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
         }
 
         void window_Load()
@@ -511,7 +549,7 @@ namespace RLNET
 
             //Clear
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            // This GL.ClearColor overload doesn't exist in OpenTK 5.0 pre-5: GL.ClearColor(Color.Black);
+            
 
             #region Static Pipeline Projection Setting
             //Set Projection
@@ -607,14 +645,16 @@ namespace RLNET
 
             GL.BindVertexArray(VertexArrayObject);
             // Verticies (vbo)
+            // Alternative consideration for interleaved: https://stackoverflow.com/questions/7224511/interleaved-merge-with-linq
+            IEnumerable<float> graphialParameters = rectanglePositions.Concat(rectangleTextures).Concat(foregroundColors).Concat(backgroundColors);
             GL.BindBuffer(BufferTargetARB.ArrayBuffer, vboId);
-            GL.BufferData(BufferTargetARB.ArrayBuffer, texturedRectancle, BufferUsageARB.StaticDraw);
+            GL.BufferData(BufferTargetARB.ArrayBuffer, graphialParameters.ToArray(), BufferUsageARB.StaticDraw);
 
             // Indicies (ebo)
             GL.BindBuffer(BufferTargetARB.ElementArrayBuffer, iboId);
             GL.BufferData(BufferTargetARB.ElementArrayBuffer, texturedRectangleIndices, BufferUsageARB.StaticDraw);
 
-            ConfigureVertexArray();
+            ConfigureGLArrays(graphialParameters.Count() / 12); // TODO make this not a magic number
 
             GL.BindVertexArray(VertexArrayObject);
             GL.ActiveTexture(TextureUnit.Texture0);
@@ -631,17 +671,26 @@ namespace RLNET
         /// Configures the vertex array.
         /// This MUST be called AFTER The VBO and EBO are written to, every time.
         /// </summary>
-        private void ConfigureVertexArray()
+        /// <param name="numVertices">The number of verticies in <see cref="VertexArrayObject"/>.</param>
+        private void ConfigureGLArrays(int numVertices)
         {
-            int vertexShaderStride = 4 * sizeof(float);
-
+            int offset = 0;
             GL.BindVertexArray(VertexArrayObject);
             
             GL.EnableVertexAttribArray(VertexCoordinateAttributeLocation);
-            GL.VertexAttribPointer(VertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 0);
+            GL.VertexAttribPointer(VertexCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), offset);
+            offset += numVertices * 2 * sizeof(float);
 
             GL.EnableVertexAttribArray(TextureCoordinateAttributeLocation);
-            GL.VertexAttribPointer(TextureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, vertexShaderStride, 2 * sizeof(float));
+            GL.VertexAttribPointer(TextureCoordinateAttributeLocation, 2, VertexAttribPointerType.Float, false, 2 * sizeof(float), offset);
+            offset += numVertices * 2 * sizeof(float);
+
+            GL.EnableVertexAttribArray(ForegroundColorAttributeLocation);
+            GL.VertexAttribPointer(ForegroundColorAttributeLocation, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), offset);
+            offset += numVertices * 4 * sizeof(float);
+
+            GL.EnableVertexAttribArray(BackgroundColorAttributeLocation);
+            GL.VertexAttribPointer(BackgroundColorAttributeLocation, 4, VertexAttribPointerType.Float, false, 4 * sizeof(float), offset);
         }
 
         private void CellsToVertices()
